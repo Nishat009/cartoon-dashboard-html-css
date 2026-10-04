@@ -1,0 +1,11 @@
+services:
+  mongodb:
+    image: mongo:8
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - cartoon-mongodb:/data/db
+
+volumes:
+  cartoon-mongodb:

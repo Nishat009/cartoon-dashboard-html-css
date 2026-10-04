@@ -1,0 +1,17 @@
+{
+  "name": "cartoon-lifestyle",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "start:web": "npm run start --workspace frontend",
+    "start:api": "npm run start --workspace backend",
+    "db:up": "docker compose up -d mongodb",
+    "db:down": "docker compose stop mongodb",
+    "seed": "npm run seed --workspace backend",
+    "build": "npm run build --workspace frontend"
+  }
+}

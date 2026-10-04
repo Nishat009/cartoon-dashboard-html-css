@@ -1,0 +1,87 @@
+<main class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="#" aria-label="Cartoon Lifestyle home"><span class="brand-mark">C</span><span>toon<span class="brand-accent">box</span></span></a>
+    <div class="profile">
+      <img [src]="imageUrl('/image/woman-portfolio.jpg')" alt="Profile">
+      <div><strong>{{ user?.name || 'Cartoon fan' }}</strong><small>{{ user ? 'Welcome back' : 'Your next favorite awaits' }}</small></div>
+    </div>
+    <p class="nav-label">DISCOVER</p>
+    <nav>
+      <button [class.active]="view === 'New'" (click)="selectView('New')"><i class="fa-solid fa-compass"></i> New releases</button>
+      <button [class.active]="view === 'Trending'" (click)="selectView('Trending')"><i class="fa-solid fa-arrow-trend-up"></i> Trending</button>
+      <button [class.active]="view === 'Favorites'" (click)="selectView('Favorites')"><i class="fa-solid fa-heart"></i> My favorites</button>
+      <button [class.active]="view === 'History'" (click)="selectView('History')"><i class="fa-solid fa-clock-rotate-left"></i> Watch history</button>
+    </nav>
+    <div class="sidebar-bottom">
+      @if (user) {
+        <button class="account-btn" (click)="signOut()"><i class="fa-solid fa-right-from-bracket"></i> Sign out</button>
+      } @else {
+        <button class="account-btn" (click)="authOpen = true"><i class="fa-regular fa-user"></i> Sign in</button>
+      }
+      <p>Made for animation lovers ✨</p>
+    </div>
+  </aside>
+
+  <section class="main-content">
+    <header class="topbar">
+      <div><span class="eyebrow">YOUR LITTLE ESCAPE</span><h1>Find your next <span>favorite.</span></h1></div>
+      @if (user) { <button class="user-pill" (click)="signOut()"><i class="fa-solid fa-circle-user"></i> {{ user.name }} <i class="fa-solid fa-chevron-down"></i></button> }
+      @else { <button class="sign-in" (click)="authOpen = true">Sign in <i class="fa-solid fa-arrow-right"></i></button> }
+    </header>
+    <section class="hero">
+      <img [src]="imageUrl('/image/slide-1.jpg')" alt="">
+      <div class="hero-shade"></div>
+      <div class="hero-copy"><span class="tag">FEATURED STORY</span><h2>Big worlds.<br>Little escapes.</h2><p>Pick a universe and let the good times roll.</p><button (click)="loadCartoons()">Explore collection <i class="fa-solid fa-arrow-right"></i></button></div>
+      <div class="hero-note"><i class="fa-solid fa-sparkles"></i> Your next comfort show is here</div>
+    </section>
+
+    <section class="catalog">
+      <div class="section-heading"><div><span class="eyebrow">{{ view === 'New' ? 'HAND-PICKED FOR YOU' : 'YOUR PERSONAL COLLECTION' }}</span><h2>{{ view === 'Favorites' ? 'Your favorites' : view === 'History' ? 'Keep watching' : view === 'Trending' ? 'Trending now' : 'Explore cartoons' }}</h2></div><span class="count">{{ cartoons.length }} titles</span></div>
+      <div class="filters">
+        <label class="search"><i class="fa-solid fa-magnifying-glass"></i><input [(ngModel)]="search" (ngModelChange)="selectView('New')" placeholder="Search cartoons..." aria-label="Search cartoons"></label>
+        <div class="genre-list">@for (item of genres; track item) { <button [class.active]="genre === item" (click)="genre = item; selectView('New')">{{ item }}</button> }</div>
+      </div>
+      @if (error) { <div class="notice" role="alert">{{ error }} <button (click)="error = ''" aria-label="Dismiss">×</button></div> }
+      @if (loading) { <div class="empty">Finding something fun for you…</div> }
+      @else if (!cartoons.length) { <div class="empty"><i class="fa-regular fa-face-smile"></i><h3>No cartoons found</h3><p>Try another search or explore a different genre.</p></div> }
+      @else {
+        <div class="card-grid">
+          @for (cartoon of cartoons; track cartoon._id) {
+            <article class="cartoon-card" (click)="openCartoon(cartoon)" (keydown.enter)="openCartoon(cartoon)" tabindex="0">
+              <div class="poster"><img [src]="imageUrl(cartoon.image)" [alt]="cartoon.title" loading="lazy"><span class="genre-tag">{{ cartoon.genre }}</span><button class="heart" [class.liked]="favorites.has(cartoon._id)" (click)="toggleFavorite(cartoon, $event)" [attr.aria-label]="favorites.has(cartoon._id) ? 'Remove from favorites' : 'Add to favorites'"><i class="fa-solid fa-heart"></i></button><span class="play"><i class="fa-solid fa-play"></i></span></div>
+              <div class="card-info"><div><h3>{{ cartoon.title }}</h3><p>{{ cartoon.year }} <span>·</span> {{ cartoon.episodes }} episodes</p></div><span class="rating"><i class="fa-solid fa-star"></i> {{ cartoon.rating }}</span></div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+    <footer>Good stories have no age limit <span>✳</span></footer>
+  </section>
+</main>
+
+@if (selected) {
+  <div class="modal-backdrop" (click)="selected = null" (keydown.escape)="selected = null">
+    <section class="detail-modal" role="dialog" aria-modal="true" [attr.aria-label]="selected.title" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="selected = null" aria-label="Close">×</button>
+      <img class="detail-image" [src]="imageUrl(selected.image)" [alt]="selected.title">
+      <span class="tag">{{ selected.genre }} · {{ selected.year }}</span><h2>{{ selected.title }}</h2><p>{{ selected.description }}</p>
+      <div class="detail-stats"><span><i class="fa-solid fa-star"></i> {{ selected.rating }} rating</span><span>{{ selected.episodes }} episodes</span><span>{{ selected.views }} views</span></div>
+      <button class="primary-btn" (click)="toggleFavorite(selected)"><i class="fa-solid fa-heart"></i> {{ favorites.has(selected._id) ? 'Remove favorite' : 'Add to favorites' }}</button>
+    </section>
+  </div>
+}
+
+@if (authOpen) {
+  <div class="modal-backdrop" (click)="authOpen = false">
+    <form class="auth-modal" (ngSubmit)="submitAuth()" (click)="$event.stopPropagation()">
+      <button type="button" class="modal-close" (click)="authOpen = false" aria-label="Close">×</button>
+      <span class="eyebrow">JOIN THE CLUB</span><h2>{{ registering ? 'Create your account' : 'Welcome back' }}</h2><p>Save favorites and pick up where you left off.</p>
+      @if (registering) { <label>Your name<input name="name" [(ngModel)]="name" required maxlength="60" autocomplete="name"></label> }
+      <label>Email address<input name="email" [(ngModel)]="email" required type="email" autocomplete="email"></label>
+      <label>Password<input name="password" [(ngModel)]="password" required type="password" minlength="8" autocomplete="current-password"></label>
+      @if (error) { <div class="notice" role="alert">{{ error }}</div> }
+      <button class="primary-btn" type="submit">{{ registering ? 'Create account' : 'Sign in' }}</button>
+      <button type="button" class="switch-auth" (click)="registering = !registering; error = ''">{{ registering ? 'Already have an account? Sign in' : 'New here? Create an account' }}</button>
+    </form>
+  </div>
+}
