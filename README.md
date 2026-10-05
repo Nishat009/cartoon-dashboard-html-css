@@ -1,6 +1,7 @@
-# Cartoon Lifestyle
+# Toonbox
 
-A full-stack cartoon discovery dashboard built with Angular and Node.js/Express.
+A full-stack cartoon discovery dashboard built with Angular and Node.js/Express,
+with a pink/purple theme, scroll-reveal animations, and animated counters.
 
 ## Requirements
 
@@ -45,6 +46,20 @@ Sign up before using personal favorites and watch history.
 The API also exposes admin-only cartoon management endpoints; set a user's
 `role` to `admin` in MongoDB to use them.
 
+## Demo mode
+
+If the API is offline or returns no cartoons, the frontend switches to demo
+mode and uses a built-in catalog (`frontend/src/app/demo-data.ts`). Search,
+filters, favorites, and watch history all work in the browser without signing
+in, but nothing is saved. Posters are generated as SVGs, and the same
+generator is used as a fallback when a cartoon image fails to load.
+
+To try the UI without MongoDB, run only:
+
+```powershell
+npm run start:web
+```
+
 ## API
 
 - `GET /api/health`
@@ -60,6 +75,9 @@ The API also exposes admin-only cartoon management endpoints; set a user's
 
 ```text
 frontend/   Angular application
+  src/app/app.component.*      Dashboard layout and logic
+  src/app/demo-data.ts         Offline demo catalog and SVG poster generator
+  src/app/motion.directives.ts Scroll-reveal and count-up directives
 backend/    Express API, MongoDB models, and seed data
-image/      Existing dashboard images served by the Express API
+image/      Dashboard images and video served by the Express API
 ```
