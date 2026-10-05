@@ -1,72 +1,312 @@
-<main class="shell">
-  <aside class="sidebar">
-    <a class="brand" href="#" aria-label="Cartoon Lifestyle home"><span class="brand-mark">C</span><span>toon<span class="brand-accent">box</span></span></a>
-    <div class="profile">
-      <img [src]="imageUrl('/image/woman-portfolio.jpg')" alt="Profile">
-      <div><strong>{{ user?.name || 'Cartoon fan' }}</strong><small>{{ user ? 'Welcome back' : 'Your next favorite awaits' }}</small></div>
-    </div>
-    <p class="nav-label">DISCOVER</p>
-    <nav>
-      <button [class.active]="view === 'New'" (click)="selectView('New')"><i class="fa-solid fa-compass"></i> New releases</button>
-      <button [class.active]="view === 'Trending'" (click)="selectView('Trending')"><i class="fa-solid fa-arrow-trend-up"></i> Trending</button>
-      <button [class.active]="view === 'Favorites'" (click)="selectView('Favorites')"><i class="fa-solid fa-heart"></i> My favorites</button>
-      <button [class.active]="view === 'History'" (click)="selectView('History')"><i class="fa-solid fa-clock-rotate-left"></i> Watch history</button>
+<header class="site-header" #header>
+  <div class="container nav">
+    <a class="brand" href="#top" (click)="$event.preventDefault(); scrollTo('top')" aria-label="Toonbox home">
+      <span class="brand-mark"><i class="fa-solid fa-star"></i></span>TOONBOX
+    </a>
+    <nav class="nav-links" [class.open]="menuOpen">
+      <button (click)="scrollTo('collection')">Collection</button>
+      <button (click)="scrollTo('picks')">Top picks</button>
+      <button (click)="scrollTo('steps')">How it works</button>
+      <button (click)="scrollTo('app')">App</button>
+      <button (click)="scrollTo('about')">About</button>
     </nav>
-    <div class="sidebar-bottom">
+    <div class="nav-actions">
       @if (user) {
-        <button class="account-btn" (click)="signOut()"><i class="fa-solid fa-right-from-bracket"></i> Sign out</button>
+        <button class="pill-btn ghost" (click)="signOut()"><i class="fa-solid fa-circle-user"></i> {{ user.name }}</button>
       } @else {
-        <button class="account-btn" (click)="authOpen = true"><i class="fa-regular fa-user"></i> Sign in</button>
+        <button class="pill-btn" (click)="authOpen = true">Sign in</button>
       }
-      <p>Made for animation lovers ✨</p>
+      <button class="menu-btn" (click)="menuOpen = !menuOpen" [attr.aria-expanded]="menuOpen" aria-label="Menu"><i class="fa-solid" [class.fa-bars]="!menuOpen" [class.fa-xmark]="menuOpen"></i></button>
     </div>
-  </aside>
+  </div>
+</header>
 
-  <section class="main-content">
-    <header class="topbar">
-      <div><span class="eyebrow">YOUR LITTLE ESCAPE</span><h1>Find your next <span>favorite.</span></h1></div>
-      @if (user) { <button class="user-pill" (click)="signOut()"><i class="fa-solid fa-circle-user"></i> {{ user.name }} <i class="fa-solid fa-chevron-down"></i></button> }
-      @else { <button class="sign-in" (click)="authOpen = true">Sign in <i class="fa-solid fa-arrow-right"></i></button> }
-    </header>
-    <section class="hero">
-      <img [src]="imageUrl('/image/slide-1.jpg')" alt="">
-      <div class="hero-shade"></div>
-      <div class="hero-copy"><span class="tag">FEATURED STORY</span><h2>Big worlds.<br>Little escapes.</h2><p>Pick a universe and let the good times roll.</p><button (click)="loadCartoons()">Explore collection <i class="fa-solid fa-arrow-right"></i></button></div>
-      <div class="hero-note"><i class="fa-solid fa-sparkles"></i> Your next comfort show is here</div>
-    </section>
+<main>
+  <!-- HERO -->
+  <section class="hero" id="top" #hero>
+    <div class="hero-glow" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="sparkles" aria-hidden="true">@for (s of [1,2,3,4,5,6,7,8]; track s) { <i></i> }</div>
 
-    <section class="catalog">
-      <div class="section-heading"><div><span class="eyebrow">{{ view === 'New' ? 'HAND-PICKED FOR YOU' : 'YOUR PERSONAL COLLECTION' }}</span><h2>{{ view === 'Favorites' ? 'Your favorites' : view === 'History' ? 'Keep watching' : view === 'Trending' ? 'Trending now' : 'Explore cartoons' }}</h2></div><span class="count">{{ cartoons.length }} titles</span></div>
-      <div class="filters">
-        <label class="search"><i class="fa-solid fa-magnifying-glass"></i><input [(ngModel)]="search" (ngModelChange)="selectView('New')" placeholder="Search cartoons..." aria-label="Search cartoons"></label>
-        <div class="genre-list">@for (item of genres; track item) { <button [class.active]="genre === item" (click)="genre = item; selectView('New')">{{ item }}</button> }</div>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <h1 class="hero-title">
+          <span class="line"><span>Cartoons For</span></span>
+          <span class="line"><span>Every <em>Mood.</em></span></span>
+        </h1>
+        <p class="hero-label">Choose a world</p>
+        <div class="chips" role="tablist">
+          @for (item of featured; track item._id; let i = $index) {
+            <button role="tab" [class.active]="i === heroIndex" [attr.aria-selected]="i === heroIndex" (click)="selectHero(i)">{{ item.genre }}</button>
+          }
+        </div>
+        @for (item of current ? [current] : []; track item._id) {
+          <div class="hero-stats">
+            <div><small>Fan rating</small><strong>{{ item.rating }}<span>/10</span></strong></div>
+            <div><small>Episodes</small><strong>{{ item.episodes }}</strong></div>
+            <div><small>Since</small><strong>{{ item.year }}</strong></div>
+          </div>
+          <p class="hero-now"><span class="dot"></span> Now showing: <b>{{ item.title }}</b></p>
+        }
+        <div class="hero-actions">
+          <button class="pill-btn big" (click)="current && openCartoon(current)"><i class="fa-solid fa-play"></i> Watch now</button>
+          <button class="pill-btn ghost big" (click)="scrollTo('collection')">Browse all <i class="fa-solid fa-arrow-down"></i></button>
+        </div>
       </div>
+
+      <div class="hero-visual">
+        <div class="hero-badge"><span class="dot"></span> Funny, colorful and ready the moment you are.</div>
+        <div class="portal">
+          <span class="ring r1"></span><span class="ring r2"></span>
+          <div class="portal-frame">
+            @for (item of featured; track item._id; let i = $index) {
+              <img [src]="imageUrl(item.image)" [alt]="item.title" [class.active]="i === heroIndex" (error)="imageFallback($event, item)">
+            }
+          </div>
+        </div>
+        <div class="float-card fc-1"><i class="fa-solid fa-heart"></i><div><b>{{ favorites.size || 'Loved' }}</b><small>{{ favorites.size ? 'in your list' : 'by little fans' }}</small></div></div>
+        <div class="float-card fc-2"><i class="fa-solid fa-wand-magic-sparkles"></i><div><b>New episodes</b><small>every Friday</small></div></div>
+      </div>
+    </div>
+
+    <div class="container">
+      <form class="finder" (ngSubmit)="findNow()">
+        <div class="finder-top">
+          <span class="finder-label">Filter:</span>
+          <div class="seg">
+            <button type="button" [class.on]="list === 'all'" (click)="setList('all')">Discover</button>
+            <button type="button" [class.on]="list === 'favorites'" (click)="setList('favorites')">My list</button>
+            <button type="button" [class.on]="list === 'history'" (click)="setList('history')">Watched</button>
+          </div>
+          <label class="switch">Trending only
+            <input type="checkbox" [checked]="sort === 'trending'" (change)="toggleTrending()">
+            <span class="knob"></span>
+          </label>
+        </div>
+        <div class="finder-fields">
+          <label class="field"><span>Search</span>
+            <span class="control"><i class="fa-solid fa-magnifying-glass"></i><input name="q" [(ngModel)]="search" placeholder="Title, hero, world..."></span>
+          </label>
+          <label class="field"><span>Genre</span>
+            <span class="control"><i class="fa-solid fa-masks-theater"></i>
+              <select name="genre" [(ngModel)]="genre">@for (item of genres; track item) { <option [value]="item">{{ item }}</option> }</select>
+            </span>
+          </label>
+          <label class="field"><span>Sort by</span>
+            <span class="control"><i class="fa-solid fa-arrow-down-wide-short"></i>
+              <select name="sort" [(ngModel)]="sort">
+                <option value="new">New releases</option>
+                <option value="trending">Trending</option>
+                <option value="rated">Top rated</option>
+              </select>
+            </span>
+          </label>
+          <button class="pill-btn big" type="submit">Find cartoons</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- COLLECTION -->
+  <section class="section" id="collection">
+    <div class="container">
+      <div class="section-head" appReveal>
+        <div><span class="kicker">The collection</span><h2>Our Cartoon <em>Collection</em></h2></div>
+        <p>From giggle-filled comedies to big hero adventures, every world is one tap away.</p>
+      </div>
+      <div class="tabs" appReveal [revealDelay]="100">
+        @for (item of genres; track item) {
+          <button [class.active]="genre === item" (click)="setGenre(item)">{{ item }}</button>
+        }
+      </div>
+      @if (demo) { <div class="notice soft"><i class="fa-solid fa-circle-info"></i> The backend is offline, so you are seeing demo cartoons.</div> }
       @if (error) { <div class="notice" role="alert">{{ error }} <button (click)="error = ''" aria-label="Dismiss">×</button></div> }
-      @if (loading) { <div class="empty">Finding something fun for you…</div> }
-      @else if (!cartoons.length) { <div class="empty"><i class="fa-regular fa-face-smile"></i><h3>No cartoons found</h3><p>Try another search or explore a different genre.</p></div> }
-      @else {
+
+      @if (loading) {
+        <div class="card-grid">@for (s of [1,2,3,4]; track s) { <div class="toon-card skeleton"></div> }</div>
+      } @else if (!cartoons.length) {
+        <div class="empty"><i class="fa-regular fa-face-smile-wink"></i><h3>No cartoons found</h3><p>Try another search or explore a different genre.</p></div>
+      } @else {
         <div class="card-grid">
-          @for (cartoon of cartoons; track cartoon._id) {
-            <article class="cartoon-card" (click)="openCartoon(cartoon)" (keydown.enter)="openCartoon(cartoon)" tabindex="0">
-              <div class="poster"><img [src]="imageUrl(cartoon.image)" [alt]="cartoon.title" loading="lazy"><span class="genre-tag">{{ cartoon.genre }}</span><button class="heart" [class.liked]="favorites.has(cartoon._id)" (click)="toggleFavorite(cartoon, $event)" [attr.aria-label]="favorites.has(cartoon._id) ? 'Remove from favorites' : 'Add to favorites'"><i class="fa-solid fa-heart"></i></button><span class="play"><i class="fa-solid fa-play"></i></span></div>
-              <div class="card-info"><div><h3>{{ cartoon.title }}</h3><p>{{ cartoon.year }} <span>·</span> {{ cartoon.episodes }} episodes</p></div><span class="rating"><i class="fa-solid fa-star"></i> {{ cartoon.rating }}</span></div>
+          @for (cartoon of cartoons; track cartoon._id; let i = $index) {
+            <article class="toon-card" appReveal [revealDelay]="(i % 4) * 90" (click)="openCartoon(cartoon)" (keydown.enter)="openCartoon(cartoon)" tabindex="0">
+              <div class="card-top">
+                <div><h3>{{ cartoon.title }}</h3><small>{{ cartoon.genre }} · {{ cartoon.year }}</small></div>
+                <button class="heart" [class.liked]="favorites.has(cartoon._id)" (click)="toggleFavorite(cartoon, $event)" [attr.aria-label]="favorites.has(cartoon._id) ? 'Remove from favorites' : 'Add to favorites'"><i class="fa-solid fa-heart"></i></button>
+              </div>
+              <div class="card-media">
+                <img [src]="imageUrl(cartoon.image)" [alt]="cartoon.title" loading="lazy" (error)="imageFallback($event, cartoon)">
+                <span class="play"><i class="fa-solid fa-play"></i></span>
+              </div>
+              <div class="card-bottom">
+                <div><small>Fan rating</small><strong><i class="fa-solid fa-star"></i> {{ cartoon.rating }}</strong></div>
+                <span class="meta">{{ cartoon.episodes }} eps · {{ cartoon.views.toLocaleString() }} views</span>
+              </div>
             </article>
           }
         </div>
       }
-    </section>
-    <footer>Good stories have no age limit <span>✳</span></footer>
+      <div class="center" appReveal><button class="link-btn" (click)="resetFilters()">Explore all <i class="fa-solid fa-arrow-right"></i></button></div>
+    </div>
+  </section>
+
+  <!-- TOP PICKS -->
+  <section class="section" id="picks">
+    <div class="container">
+      <div class="section-head" appReveal>
+        <div><span class="kicker">Fan favorites</span><h2>Enjoy Extra Fun With<br>Our <em>Top Picks</em></h2></div>
+        <div class="arrows">
+          <button (click)="scrollPicks(-1)" aria-label="Previous"><i class="fa-solid fa-arrow-left"></i></button>
+          <button class="on" (click)="scrollPicks(1)" aria-label="Next"><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
+      <div class="picks-track" #picksTrack appReveal [revealDelay]="120">
+        @for (item of picks; track item._id; let i = $index) {
+          <article class="pick" (click)="openCartoon(item)">
+            <img [src]="imageUrl(item.image)" [alt]="item.title" loading="lazy" (error)="imageFallback($event, item)">
+            <div class="pick-shade"></div>
+            <div class="pick-tags"><span>{{ i === 0 ? 'Fan No.1' : item.genre }} <i class="fa-solid fa-arrow-right"></i></span><span>{{ item.year }}</span></div>
+            <div class="pick-copy">
+              <p>{{ item.title }}. {{ item.description }}</p>
+              <strong>{{ fanScore(item) }}%</strong>
+              <small>of viewers loved it</small>
+            </div>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- STEPS -->
+  <section class="section" id="steps">
+    <div class="container">
+      <div class="section-head" appReveal>
+        <div><span class="kicker">How it works</span><h2>Three steps to <em>cartoon time</em></h2></div>
+        <p>No signup needed to browse. No waiting. Just pick a world and start the fun.</p>
+      </div>
+      <div class="steps" appReveal>
+        <div class="steps-line"><span class="fill"></span><span class="runner"></span></div>
+        <div class="steps-grid">
+          @for (step of steps; track step.title; let i = $index) {
+            <div class="step" [style.--i]="i">
+              <span class="num">0{{ i + 1 }}</span>
+              <h3>{{ step.title }}</h3>
+              <p>{{ step.text }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <section class="section" id="app">
+    <div class="container">
+      <div class="app-card" appReveal>
+        <div class="app-copy">
+          <span class="kicker">Toonbox on mobile</span>
+          <h2>Take Your Cartoons<br>Anywhere With <em>Our App</em></h2>
+          <p>Every world in your pocket, from the bus ride to the bedtime story.</p>
+          <ul>
+            <li><i class="fa-solid fa-check"></i> Download episodes for offline play</li>
+            <li><i class="fa-solid fa-check"></i> Kid-safe profiles and screen timers</li>
+            <li><i class="fa-solid fa-check"></i> Favorites synced across devices</li>
+            <li><i class="fa-solid fa-check"></i> New episode alerts every Friday</li>
+          </ul>
+          <div class="stores">
+            <button class="store"><i class="fa-brands fa-google-play"></i><span><small>Get it on</small>Google Play</span></button>
+            <button class="store"><i class="fa-brands fa-apple"></i><span><small>Download on</small>App Store</span></button>
+          </div>
+        </div>
+        <div class="phones">
+          <div class="phone back">
+            <div class="screen">
+              <div class="ph-bar"><span></span><b>Toonbox</b><span></span></div>
+              <div class="ph-chips"><i class="on"></i><i></i><i></i></div>
+              @for (item of catalog.slice(4, 7); track item._id) {
+                <div class="ph-row"><img [src]="imageUrl(item.image)" alt="" (error)="imageFallback($event, item)"><div><b>{{ item.title }}</b><small>★ {{ item.rating }}</small></div></div>
+              }
+            </div>
+          </div>
+          <div class="phone front">
+            <div class="screen">
+              <div class="ph-bar"><span></span><b>Now playing</b><span></span></div>
+              @if (catalog[0]; as top) {
+                <img class="ph-hero" [src]="imageUrl(top.image)" alt="" (error)="imageFallback($event, top)">
+                <b class="ph-title">{{ top.title }}</b>
+                <small class="ph-sub">{{ top.genre }} · {{ top.episodes }} episodes</small>
+              }
+              <div class="ph-progress"><span></span></div>
+              <div class="ph-controls"><i class="fa-solid fa-backward"></i><span><i class="fa-solid fa-pause"></i></span><i class="fa-solid fa-forward"></i></div>
+              <div class="ph-cta">Continue watching</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERY / ABOUT -->
+  <section class="section" id="about">
+    <div class="container bento">
+      @if (catalog.length) {
+        <div class="tile t-big" appReveal>
+          <img [src]="imageUrl(catalog[1 % catalog.length].image)" alt="" loading="lazy" (error)="imageFallback($event, catalog[1 % catalog.length])">
+          <div class="tile-shade"></div>
+          <h3>Not just a cartoon,<br>but the start of a story.</h3>
+        </div>
+        <div class="tile t-wide" appReveal [revealDelay]="100">
+          <img [src]="imageUrl(catalog[2 % catalog.length].image)" alt="" loading="lazy" (error)="imageFallback($event, catalog[2 % catalog.length])">
+          <div class="tile-shade"></div>
+          <div class="tile-copy"><h3>Explore more to find<br>your comfort show</h3><button class="pill-btn" (click)="scrollTo('collection')">Explore <i class="fa-solid fa-arrow-right"></i></button></div>
+        </div>
+        <div class="tile t-stat" appReveal [revealDelay]="180">
+          <img [src]="imageUrl(catalog[3 % catalog.length].image)" alt="" loading="lazy" (error)="imageFallback($event, catalog[3 % catalog.length])">
+          <div class="tile-shade"></div>
+          <div class="stat"><small>Total views</small><strong [appCountUp]="totalViews"></strong></div>
+        </div>
+        <div class="tile t-stat alt" appReveal [revealDelay]="260">
+          <div class="stat"><small>Episodes to binge</small><strong [appCountUp]="totalEpisodes"></strong></div>
+          <div class="stat"><small>Cartoon worlds</small><strong [appCountUp]="catalog.length"></strong></div>
+        </div>
+      }
+    </div>
   </section>
 </main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-card" appReveal>
+      <div class="footer-sub">
+        <a class="brand" href="#top" (click)="$event.preventDefault(); scrollTo('top')"><span class="brand-mark"><i class="fa-solid fa-star"></i></span>TOONBOX</a>
+        <p>Get updates</p>
+        <form class="subscribe" (ngSubmit)="subscribe()">
+          <input name="subscribeEmail" type="email" [(ngModel)]="subscribeEmail" placeholder="Enter your email" aria-label="Email address" required>
+          <button class="pill-btn" type="submit">Subscribe</button>
+        </form>
+        @if (subscribed) { <p class="sub-ok"><i class="fa-solid fa-circle-check"></i> You're in! The first new episode lands this week.</p> }
+      </div>
+      <div class="footer-links">
+        <div><h4>Quick links</h4><button (click)="scrollTo('collection')">Collection</button><button (click)="scrollTo('picks')">Top picks</button><button (click)="scrollTo('steps')">How it works</button><button (click)="scrollTo('app')">App</button></div>
+        <div><h4>Support</h4><a href="#">Contact</a><a href="#">Parents guide</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+      </div>
+    </div>
+    <div class="footer-word" aria-hidden="true">TOONBOX</div>
+    <p class="copy">Good stories have no age limit ✳ © 2026 Toonbox</p>
+  </div>
+</footer>
 
 @if (selected) {
   <div class="modal-backdrop" (click)="selected = null" (keydown.escape)="selected = null">
     <section class="detail-modal" role="dialog" aria-modal="true" [attr.aria-label]="selected.title" (click)="$event.stopPropagation()">
       <button class="modal-close" (click)="selected = null" aria-label="Close">×</button>
-      <img class="detail-image" [src]="imageUrl(selected.image)" [alt]="selected.title">
-      <span class="tag">{{ selected.genre }} · {{ selected.year }}</span><h2>{{ selected.title }}</h2><p>{{ selected.description }}</p>
-      <div class="detail-stats"><span><i class="fa-solid fa-star"></i> {{ selected.rating }} rating</span><span>{{ selected.episodes }} episodes</span><span>{{ selected.views }} views</span></div>
-      <button class="primary-btn" (click)="toggleFavorite(selected)"><i class="fa-solid fa-heart"></i> {{ favorites.has(selected._id) ? 'Remove favorite' : 'Add to favorites' }}</button>
+      <img class="detail-image" [src]="imageUrl(selected.image)" [alt]="selected.title" (error)="imageFallback($event, selected)">
+      <div class="detail-body">
+        <span class="kicker">{{ selected.genre }} · {{ selected.year }}</span>
+        <h2>{{ selected.title }}</h2>
+        <p>{{ selected.description }}</p>
+        <div class="detail-stats"><span><i class="fa-solid fa-star"></i> {{ selected.rating }} rating</span><span>{{ selected.episodes }} episodes</span><span>{{ selected.views.toLocaleString() }} views</span></div>
+        <button class="pill-btn big" (click)="toggleFavorite(selected)"><i class="fa-solid fa-heart"></i> {{ favorites.has(selected._id) ? 'Remove favorite' : 'Add to favorites' }}</button>
+      </div>
     </section>
   </div>
 }
@@ -75,12 +315,12 @@
   <div class="modal-backdrop" (click)="authOpen = false">
     <form class="auth-modal" (ngSubmit)="submitAuth()" (click)="$event.stopPropagation()">
       <button type="button" class="modal-close" (click)="authOpen = false" aria-label="Close">×</button>
-      <span class="eyebrow">JOIN THE CLUB</span><h2>{{ registering ? 'Create your account' : 'Welcome back' }}</h2><p>Save favorites and pick up where you left off.</p>
+      <span class="kicker">Join the club</span><h2>{{ registering ? 'Create your account' : 'Welcome back' }}</h2><p>Save favorites and pick up where you left off.</p>
       @if (registering) { <label>Your name<input name="name" [(ngModel)]="name" required maxlength="60" autocomplete="name"></label> }
       <label>Email address<input name="email" [(ngModel)]="email" required type="email" autocomplete="email"></label>
       <label>Password<input name="password" [(ngModel)]="password" required type="password" minlength="8" autocomplete="current-password"></label>
       @if (error) { <div class="notice" role="alert">{{ error }}</div> }
-      <button class="primary-btn" type="submit">{{ registering ? 'Create account' : 'Sign in' }}</button>
+      <button class="pill-btn big" type="submit">{{ registering ? 'Create account' : 'Sign in' }}</button>
       <button type="button" class="switch-auth" (click)="registering = !registering; error = ''">{{ registering ? 'Already have an account? Sign in' : 'New here? Create an account' }}</button>
     </form>
   </div>
