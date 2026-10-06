@@ -6,22 +6,37 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { connectDatabase } from "./db.js";
 import { Cartoon, User } from "./models.js";
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const jwtSecret = process.env.JWT_SECRET;
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const webBuild = path.join(root, "frontend/dist/cartoon-lifestyle/browser");
+const allowedOrigins = process.env.CLIENT_ORIGIN?.split(",").map((origin) => origin.trim()).filter(Boolean) ?? [];
+const localOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
 
 if (!process.env.MONGODB_URI || !jwtSecret || jwtSecret.length < 32) {
   throw new Error("Set MONGODB_URI and a JWT_SECRET of at least 32 characters in backend/.env");
 }
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:4200" }));
+// No upgrade-insecure-requests, so the built app also loads over plain http://localhost.
+app.use(helmet({
+  contentSecurityPolicy: { directives: { upgradeInsecureRequests: null } },
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+// Any localhost port may call the API unless CLIENT_ORIGIN lists the allowed origins.
+app.use(cors({
+  origin: (origin, done) => done(null, !origin || (allowedOrigins.length ? allowedOrigins.includes(origin) : localOrigin.test(origin)))
+}));
 app.use(express.json({ limit: "100kb" }));
-app.use("/image", express.static(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../image")));
+app.use("/image", express.static(path.join(root, "image")));
+// Serve the production build (npm run build) so the app and API share one port.
+if (existsSync(webBuild)) app.use(express.static(webBuild));
 app.use("/api/auth", rateLimit({ windowMs: 15 * 60 * 1000, limit: 30 }));
 
 function asyncRoute(handler) {
@@ -175,5 +190,15 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ error: "An unexpected server error occurred." });
 });
 
-await mongoose.connect(process.env.MONGODB_URI);
-app.listen(port, () => console.log(`Cartoon Lifestyle API listening on http://localhost:${port}`));
+/** Listens on the given port, moving to the next one while ports are busy. */
+function listen(port, attemptsLeft = 20) {
+  const server = app.listen(port, (error) => {
+    if (!error) return console.log(`Cartoon Lifestyle API listening on http://localhost:${server.address().port}`);
+    if (error.code !== "EADDRINUSE" || attemptsLeft === 0) throw error;
+    console.warn(`Port ${port} is busy, trying ${port + 1}...`);
+    listen(port + 1, attemptsLeft - 1);
+  });
+}
+
+await connectDatabase();
+listen(port);

@@ -5,7 +5,9 @@ import { DEMO_CARTOONS, poster, seedFrom } from "./demo-data";
 import { AuthResponse, Cartoon, SessionUser, WatchEntry } from "./models";
 import { CountUpDirective, RevealDirective } from "./motion.directives";
 
-const API = "http://localhost:3000/api";
+// Relative, so the app works on any port: `ng serve` proxies it (proxy.conf.mjs)
+// and the API serves the production build itself.
+const API = "/api";
 
 type ListMode = "all" | "favorites" | "history";
 type SortMode = "new" | "trending" | "rated";
@@ -106,9 +108,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     clearInterval(this.picksTimer);
   }
 
-  imageUrl(image: string): string {
-    if (/^(data:|https?:)/.test(image)) return image;
-    return `${API.replace(/\/api$/, "")}${image}`;
+  imageUrl(cartoon: Cartoon): string {
+    return cartoon.image || poster(seedFrom(cartoon.title));
   }
 
   /** Falls back to a generated poster when an image cannot load. */

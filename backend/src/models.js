@@ -7,7 +7,8 @@ const cartoonSchema = new mongoose.Schema(
     genre: { type: String, required: true, trim: true },
     year: { type: Number, required: true },
     rating: { type: Number, min: 0, max: 10, default: 0 },
-    image: { type: String, required: true, trim: true },
+    // Empty means the frontend draws a generated poster.
+    image: { type: String, trim: true, default: "" },
     episodes: { type: Number, min: 0, default: 0 },
     views: { type: Number, min: 0, default: 0 },
     featured: { type: Boolean, default: false }
