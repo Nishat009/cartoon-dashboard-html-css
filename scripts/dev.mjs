@@ -14,7 +14,16 @@ const ngBin = path.join(path.dirname(require.resolve("@angular/cli/package.json"
 const children = [];
 let running = false;
 
-function isFree(port) {
+/** True when nothing answers on localhost:port and the port can be bound. */
+async function isFree(port) {
+  // On Windows, binding all interfaces can succeed even while another server
+  // (e.g. a leftover ng serve) holds [::1]:port, so probe localhost first.
+  const answers = await new Promise((resolve) => {
+    const socket = net.connect({ port, host: "localhost" })
+      .once("connect", () => { socket.destroy(); resolve(true); })
+      .once("error", () => resolve(false));
+  });
+  if (answers) return false;
   return new Promise((resolve) => {
     const server = net.createServer()
       .once("error", () => resolve(false))
