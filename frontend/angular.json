@@ -25,7 +25,8 @@
                 { "type": "initial", "maximumWarning": "700kB", "maximumError": "1MB" },
                 { "type": "anyComponentStyle", "maximumWarning": "10kB", "maximumError": "20kB" }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": { "scripts": true, "styles": { "minify": true, "inlineCritical": false }, "fonts": true }
             },
             "development": { "optimization": false, "extractLicenses": false, "sourceMap": true }
           },
@@ -33,6 +34,7 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": { "proxyConfig": "proxy.conf.mjs" },
           "configurations": {
             "production": { "buildTarget": "cartoon-lifestyle:build:production" },
             "development": { "buildTarget": "cartoon-lifestyle:build:development" }

@@ -59,7 +59,7 @@
           <span class="ring r1"></span><span class="ring r2"></span>
           <div class="portal-frame">
             @for (item of featured; track item._id; let i = $index) {
-              <img [src]="imageUrl(item.image)" [alt]="item.title" [class.active]="i === heroIndex" (error)="imageFallback($event, item)">
+              <img [src]="imageUrl(item)" [alt]="item.title" [class.active]="i === heroIndex" (error)="imageFallback($event, item)">
             }
           </div>
         </div>
@@ -134,7 +134,7 @@
                 <button class="heart" [class.liked]="favorites.has(cartoon._id)" (click)="toggleFavorite(cartoon, $event)" [attr.aria-label]="favorites.has(cartoon._id) ? 'Remove from favorites' : 'Add to favorites'"><i class="fa-solid fa-heart"></i></button>
               </div>
               <div class="card-media">
-                <img [src]="imageUrl(cartoon.image)" [alt]="cartoon.title" loading="lazy" (error)="imageFallback($event, cartoon)">
+                <img [src]="imageUrl(cartoon)" [alt]="cartoon.title" loading="lazy" (error)="imageFallback($event, cartoon)">
                 <span class="play"><i class="fa-solid fa-play"></i></span>
               </div>
               <div class="card-bottom">
@@ -162,7 +162,7 @@
       <div class="picks-track" #picksTrack appReveal [revealDelay]="120">
         @for (item of picks; track item._id; let i = $index) {
           <article class="pick" (click)="openCartoon(item)">
-            <img [src]="imageUrl(item.image)" [alt]="item.title" loading="lazy" (error)="imageFallback($event, item)">
+            <img [src]="imageUrl(item)" [alt]="item.title" loading="lazy" (error)="imageFallback($event, item)">
             <div class="pick-shade"></div>
             <div class="pick-tags"><span>{{ i === 0 ? 'Fan No.1' : item.genre }} <i class="fa-solid fa-arrow-right"></i></span><span>{{ item.year }}</span></div>
             <div class="pick-copy">
@@ -223,7 +223,7 @@
               <div class="ph-bar"><span></span><b>Toonbox</b><span></span></div>
               <div class="ph-chips"><i class="on"></i><i></i><i></i></div>
               @for (item of catalog.slice(4, 7); track item._id) {
-                <div class="ph-row"><img [src]="imageUrl(item.image)" alt="" (error)="imageFallback($event, item)"><div><b>{{ item.title }}</b><small>★ {{ item.rating }}</small></div></div>
+                <div class="ph-row"><img [src]="imageUrl(item)" alt="" (error)="imageFallback($event, item)"><div><b>{{ item.title }}</b><small>★ {{ item.rating }}</small></div></div>
               }
             </div>
           </div>
@@ -231,7 +231,7 @@
             <div class="screen">
               <div class="ph-bar"><span></span><b>Now playing</b><span></span></div>
               @if (catalog[0]; as top) {
-                <img class="ph-hero" [src]="imageUrl(top.image)" alt="" (error)="imageFallback($event, top)">
+                <img class="ph-hero" [src]="imageUrl(top)" alt="" (error)="imageFallback($event, top)">
                 <b class="ph-title">{{ top.title }}</b>
                 <small class="ph-sub">{{ top.genre }} · {{ top.episodes }} episodes</small>
               }
@@ -250,17 +250,17 @@
     <div class="container bento">
       @if (catalog.length) {
         <div class="tile t-big" appReveal>
-          <img [src]="imageUrl(catalog[1 % catalog.length].image)" alt="" loading="lazy" (error)="imageFallback($event, catalog[1 % catalog.length])">
+          <img [src]="imageUrl(catalog[1 % catalog.length])" alt="" loading="lazy" (error)="imageFallback($event, catalog[1 % catalog.length])">
           <div class="tile-shade"></div>
           <h3>Not just a cartoon,<br>but the start of a story.</h3>
         </div>
         <div class="tile t-wide" appReveal [revealDelay]="100">
-          <img [src]="imageUrl(catalog[2 % catalog.length].image)" alt="" loading="lazy" (error)="imageFallback($event, catalog[2 % catalog.length])">
+          <img [src]="imageUrl(catalog[2 % catalog.length])" alt="" loading="lazy" (error)="imageFallback($event, catalog[2 % catalog.length])">
           <div class="tile-shade"></div>
           <div class="tile-copy"><h3>Explore more to find<br>your comfort show</h3><button class="pill-btn" (click)="scrollTo('collection')">Explore <i class="fa-solid fa-arrow-right"></i></button></div>
         </div>
         <div class="tile t-stat" appReveal [revealDelay]="180">
-          <img [src]="imageUrl(catalog[3 % catalog.length].image)" alt="" loading="lazy" (error)="imageFallback($event, catalog[3 % catalog.length])">
+          <img [src]="imageUrl(catalog[3 % catalog.length])" alt="" loading="lazy" (error)="imageFallback($event, catalog[3 % catalog.length])">
           <div class="tile-shade"></div>
           <div class="stat"><small>Total views</small><strong [appCountUp]="totalViews"></strong></div>
         </div>
@@ -299,7 +299,7 @@
   <div class="modal-backdrop" (click)="selected = null" (keydown.escape)="selected = null">
     <section class="detail-modal" role="dialog" aria-modal="true" [attr.aria-label]="selected.title" (click)="$event.stopPropagation()">
       <button class="modal-close" (click)="selected = null" aria-label="Close">×</button>
-      <img class="detail-image" [src]="imageUrl(selected.image)" [alt]="selected.title" (error)="imageFallback($event, selected)">
+      <img class="detail-image" [src]="imageUrl(selected)" [alt]="selected.title" (error)="imageFallback($event, selected)">
       <div class="detail-body">
         <span class="kicker">{{ selected.genre }} · {{ selected.year }}</span>
         <h2>{{ selected.title }}</h2>
