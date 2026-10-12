@@ -1,0 +1,23 @@
+@use 'mixins';
+
+/* Cartoon management shares the collection's palette and rounded surfaces. */
+.admin-layout { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 28px; align-items: start; }
+.admin-form, .admin-catalog { padding: 24px; border: 1px solid var(--line-strong); border-radius: 26px; background: linear-gradient(160deg, var(--surface-2), var(--bg-2)); }
+.admin-form fieldset { display: grid; gap: 16px; border: 0; padding: 20px 0 0; margin: 0; min-width: 0; }
+.admin-form label { display: grid; gap: 6px; color: var(--muted); font-size: 13px; font-weight: 700; }
+.admin-form input, .admin-form textarea { width: 100%; min-width: 0; padding: 12px 14px; color: var(--text); font: inherit; border-radius: 14px; border: 1px solid var(--line); background: rgba(0,0,0,.3); }
+.admin-form textarea { resize: vertical; }
+.admin-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.admin-form .admin-check { display: flex; align-items: center; gap: 10px; }
+.admin-check input { width: 18px; height: 18px; accent-color: var(--pink); }
+.admin-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.admin-row { display: flex; gap: 16px; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.admin-row:last-child { border-bottom: 0; }
+.admin-row img { width: 70px; height: 88px; border-radius: 14px; object-fit: cover; }
+.admin-row > div:first-of-type { flex: 1; min-width: 0; }
+.admin-row h3 { font-size: 18px; overflow-wrap: anywhere; }
+.admin-row small { color: var(--muted); }
+button:disabled { opacity: .5; cursor: wait; }
+@include mixins.down(980px) { .admin-layout { grid-template-columns: 1fr; } }
+@include mixins.down(640px) { .admin-row { flex-wrap: wrap; } .admin-row .admin-actions { width: 100%; } }
+

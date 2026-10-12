@@ -1,15 +1,13 @@
-import { HttpClient, HttpErrorResponse, HttpParams } from "@angular/common/http";
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { DEMO_CARTOONS, poster, seedFrom } from "./demo-data";
-import { AuthResponse, Cartoon, SessionUser, WatchEntry } from "./models";
+import { Cartoon, SessionUser, WatchEntry } from "./models";
 import { CountUpDirective, RevealDirective } from "./motion.directives";
 
-// Relative, so the app works on any port: `ng serve` proxies it (proxy.conf.mjs)
-// and the API serves the production build itself.
-const API = "/api";
 
 type ListMode = "all" | "favorites" | "history";
+type PlanId = "free" | "plus" | "family";
+
 type SortMode = "new" | "trending" | "rated";
 
 @Component({
@@ -19,13 +17,12 @@ type SortMode = "new" | "trending" | "rated";
   templateUrl: "./app.component.html"
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
-  private readonly http = inject(HttpClient);
+
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly zone = inject(NgZone);
 
   @ViewChild("hero") private hero?: ElementRef<HTMLElement>;
   @ViewChild("header") private header?: ElementRef<HTMLElement>;
-  @ViewChild("picksTrack") private picksTrack?: ElementRef<HTMLElement>;
 
   catalog: Cartoon[] = [];
   cartoons: Cartoon[] = [];
@@ -39,27 +36,85 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   genre = "All";
   list: ListMode = "all";
   sort: SortMode = "new";
-  demo = false;
+  demo = true;
   heroIndex = 0;
   menuOpen = false;
   authOpen = false;
-  registering = false;
-  email = "";
-  password = "";
+
+
+
+  plan: PlanId = 'free';
+  pendingPlan: PlanId | null = null;
+  accountMessage = '';
+  readonly plans: { id: PlanId; name: string; price: number; description: string; features: string[] }[] = [
+    { id: 'free', name: 'Starter', price: 0, description: 'Find your next favorite world.', features: ['Browse the full demo catalog', 'Personal favorites', 'Watch history'] },
+    { id: 'plus', name: 'Toonbox Plus', price: 8, description: 'A little more cartoon magic.', features: ['Everything in Starter', 'Preview premium membership', 'One explorer profile'] },
+    { id: 'family', name: 'Family', price: 14, description: 'A world for every imagination.', features: ['Everything in Plus', 'Preview a family membership', 'Family plan overview'] }
+  ];
+  get currentPlan() { return this.plans.find(item => item.id === this.plan)!; }
+  choosePlan(plan: PlanId): void {
+    if (!this.user) { this.pendingPlan = plan; this.authOpen = true; return; }
+    this.plan = plan; this.persist();
+    this.accountMessage = 'Your demo plan is now ' + this.currentPlan.name + '. No payment was taken.';
+    this.cdr.detectChanges(); this.scrollTo('account');
+  }
+
   name = "";
   error = "";
   loading = true;
   subscribeEmail = "";
   subscribed = false;
+  adminOpen = false;
+  adminSaving = false;
+  adminError = "";
+  adminMessage = "";
+  editingId: string | null = null;
+  deleting: Cartoon | null = null;
+  draft: Omit<Cartoon, "_id"> = this.emptyDraft();
+
+
+  private emptyDraft(): Omit<Cartoon, "_id"> {
+    return { title: "", description: "", genre: "", year: new Date().getFullYear(), rating: 0, image: "", episodes: 0, views: 0, featured: false };
+  }
+
+  openAdmin(): void {
+    this.adminOpen = true;
+    this.menuOpen = false;
+    this.cdr.detectChanges();
+    this.scrollTo("admin");
+  }
+
+  editCartoon(cartoon?: Cartoon): void {
+    this.editingId = cartoon?._id ?? null;
+    this.draft = cartoon ? { title: cartoon.title, description: cartoon.description, genre: cartoon.genre, year: cartoon.year, rating: cartoon.rating, image: cartoon.image, episodes: cartoon.episodes, views: cartoon.views, featured: cartoon.featured } : this.emptyDraft();
+    this.adminError = this.adminMessage = "";
+  }
+
+  saveCartoon(): void {
+    if (!this.draft.title.trim() || !this.draft.genre.trim()) return;
+    const cartoon: Cartoon = { ...this.draft, _id: this.editingId ?? crypto.randomUUID() };
+    this.setCatalog([...this.catalog.filter(item => item._id !== cartoon._id), cartoon]);
+    this.history = this.history.map(entry => entry.cartoon._id === cartoon._id ? { ...entry, cartoon } : entry);
+    this.persist(); this.editCartoon(); this.adminMessage = 'Cartoon saved in this browser.';
+  }
+
+  deleteCartoon(): void {
+    if (!this.deleting) return;
+    const id = this.deleting._id;
+    this.favorites.delete(id); this.history = this.history.filter(entry => entry.cartoon._id !== id);
+    this.setCatalog(this.catalog.filter(item => item._id !== id));
+    if (this.selected?._id === id) this.selected = null;
+    if (this.editingId === id) this.editCartoon();
+    this.deleting = null; this.persist(); this.adminMessage = 'Cartoon deleted from this browser.';
+  }
 
   readonly steps = [
-    { title: "Pick a world", text: "Browse comedy, action, anime and family worlds. Filter by mood in a tap." },
-    { title: "Save your favorites", text: "Heart the shows you love and we keep them ready in your list." },
-    { title: "Press play", text: "Jump right back in. Your watch history remembers where you were." }
+    { title: "Pick a world", text: "Browse comedy, action, anime and family worlds. Filter by mood in a tap.", icon: "fa-earth-americas" },
+    { title: "Save your favorites", text: "Heart the shows you love and we keep them ready in your list.", icon: "fa-heart" },
+    { title: "Press play", text: "Jump right back in. Your watch history remembers where you were.", icon: "fa-play" }
   ];
 
   private heroTimer?: ReturnType<typeof setInterval>;
-  private picksTimer?: ReturnType<typeof setInterval>;
   private scrollFrame = 0;
   private readonly onScroll = () => {
     cancelAnimationFrame(this.scrollFrame);
@@ -83,21 +138,30 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadCatalog();
-    const token = localStorage.getItem("cartoon-token");
-    if (token) {
-      this.http.get<SessionUser>(`${API}/auth/me`).subscribe({
-        next: (user) => { this.user = user; this.loadUserData(); },
-        error: () => { localStorage.removeItem("cartoon-token"); this.refresh(); }
-      });
-    }
+    let catalog = DEMO_CARTOONS.map(item => ({ ...item }));
+    try {
+      const saved = JSON.parse(localStorage.getItem('toonbox-demo') || 'null');
+      if (saved && Array.isArray(saved.catalog) && Array.isArray(saved.favorites) && Array.isArray(saved.history)) {
+        catalog = saved.catalog.map((item: Cartoon) => {
+          const mock = DEMO_CARTOONS.find(cartoon => cartoon._id === item._id);
+          return mock && (!item.image || item.image.startsWith('data:image/svg+xml')) ? { ...item, image: mock.image } : item;
+        });
+        this.favorites = new Set(saved.favorites);
+        this.history = saved.history.map((entry: WatchEntry) => ({ ...entry, cartoon: catalog.find(item => item._id === entry.cartoon._id) ?? entry.cartoon }));
+      }
+    } catch { /* Storage unavailable: use mock data. */ }
+    try {
+      const saved = JSON.parse(localStorage.getItem('toonbox-demo') || 'null');
+      if (saved?.user?.id === 'demo-user' && typeof saved.user.name === 'string') this.user = saved.user;
+      if (this.plans.some(item => item.id === saved?.plan)) this.plan = saved.plan;
+    } catch { /* Start without a profile when storage is unavailable. */ }
+    this.setCatalog(catalog);
   }
 
   ngAfterViewInit(): void {
     this.zone.runOutsideAngular(() => {
       window.addEventListener("scroll", this.onScroll, { passive: true });
       this.paintScroll();
-      this.picksTimer = setInterval(() => this.autoScrollPicks(), 4500);
     });
   }
 
@@ -105,7 +169,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     window.removeEventListener("scroll", this.onScroll);
     cancelAnimationFrame(this.scrollFrame);
     clearInterval(this.heroTimer);
-    clearInterval(this.picksTimer);
   }
 
   imageUrl(cartoon: Cartoon): string {
@@ -117,6 +180,22 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     const img = event.target as HTMLImageElement;
     const fallback = poster(seedFrom(cartoon.title));
     if (img.src !== fallback) img.src = fallback;
+  }
+
+  genreCount(genre: string): number {
+    return genre === "All" ? this.catalog.length : this.catalog.filter((item) => item.genre === genre).length;
+  }
+
+  /** Picks which posters span two columns so the wall's last row is full at 4, 3 and 2 columns. */
+  isWide(index: number, columns: number): boolean {
+    const total = this.cartoons.length;
+    if (index === 0 || total < 3) return false;
+    const leadCells = columns === 2 ? 2 : 4;
+    const extra = (columns - ((total - 1 + leadCells) % columns)) % columns;
+    for (let k = 1; k <= extra; k++) {
+      if (Math.round((k * total) / (extra + 1)) === index) return true;
+    }
+    return false;
   }
 
   fanScore(cartoon: Cartoon): number {
@@ -133,6 +212,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       this.authOpen = true;
       return;
     }
+    if (this.list !== list) { this.search = ""; this.genre = "All"; }
     this.list = list;
     this.loadCartoons();
   }
@@ -142,14 +222,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadCartoons();
   }
 
-  toggleTrending(): void {
-    this.sort = this.sort === "trending" ? "new" : "trending";
+  setSort(sort: SortMode): void {
+    this.sort = sort;
     this.loadCartoons();
-  }
-
-  findNow(): void {
-    this.loadCartoons();
-    this.scrollTo("collection");
   }
 
   resetFilters(): void {
@@ -165,118 +240,32 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  scrollPicks(direction: number): void {
-    const track = this.picksTrack?.nativeElement;
-    const card = track?.querySelector<HTMLElement>(".pick");
-    if (!track || !card) return;
-    track.scrollBy({ left: direction * (card.offsetWidth + 20), behavior: "smooth" });
-  }
-
-  loadCartoons(): void {
-    if (this.demo) {
-      this.cartoons = this.applyFilters(this.localList());
-      this.refresh();
-      return;
-    }
-    if (this.list === "favorites") {
-      this.fetchList<Cartoon[]>(`${API}/favorites`, (items) => items);
-    } else if (this.list === "history") {
-      this.fetchList<WatchEntry[]>(`${API}/watch-history`, (items) => { this.history = items; return items.map((entry) => entry.cartoon); });
-    } else {
-      let params = new HttpParams();
-      if (this.search.trim()) params = params.set("q", this.search.trim());
-      if (this.genre !== "All") params = params.set("genre", this.genre);
-      if (this.sort === "trending") params = params.set("sort", "trending");
-      this.loading = true;
-      this.http.get<Cartoon[]>(`${API}/cartoons`, { params }).subscribe({
-        next: (cartoons) => { this.cartoons = this.applyFilters(cartoons); this.loading = false; this.refresh(); },
-        error: (error: HttpErrorResponse) => { this.error = this.errorMessage(error); this.loading = false; this.refresh(); }
-      });
-    }
-  }
+  loadCartoons(): void { this.cartoons = this.applyFilters(this.localList()); this.loading = false; this.refresh(); }
 
   toggleFavorite(cartoon: Cartoon, event?: Event): void {
-    event?.stopPropagation();
-    const isFavorite = this.favorites.has(cartoon._id);
-    if (this.demo) {
-      this.updateFavorite(cartoon._id, isFavorite);
-      return;
-    }
-    if (!this.user) { this.authOpen = true; return; }
-    const request = isFavorite
-      ? this.http.delete<void>(`${API}/favorites/${cartoon._id}`)
-      : this.http.put<void>(`${API}/favorites/${cartoon._id}`, {});
-    request.subscribe({
-      next: () => this.updateFavorite(cartoon._id, isFavorite),
-      error: (error: HttpErrorResponse) => { this.error = this.errorMessage(error); this.refresh(); }
-    });
+    event?.stopPropagation(); this.updateFavorite(cartoon._id, this.favorites.has(cartoon._id)); this.persist();
   }
 
   openCartoon(cartoon: Cartoon): void {
     this.selected = cartoon;
-    if (this.demo) {
-      this.history = [{ cartoon, watchedAt: new Date().toISOString() }, ...this.history.filter((entry) => entry.cartoon._id !== cartoon._id)];
-      return;
-    }
-    if (!this.user) return;
-    this.http.put<void>(`${API}/watch-history/${cartoon._id}`, {}).subscribe({
-      next: () => this.loadUserData(),
-      error: (error: HttpErrorResponse) => { this.error = this.errorMessage(error); this.refresh(); }
-    });
+    this.history = [{ cartoon, watchedAt: new Date().toISOString() }, ...this.history.filter(entry => entry.cartoon._id !== cartoon._id)].slice(0, 20);
+    if (this.list === 'history') this.loadCartoons();
+    this.persist();
   }
 
   submitAuth(): void {
-    this.error = "";
-    const endpoint = this.registering ? "register" : "login";
-    const payload = this.registering
-      ? { name: this.name, email: this.email, password: this.password }
-      : { email: this.email, password: this.password };
-    this.http.post<AuthResponse>(`${API}/auth/${endpoint}`, payload).subscribe({
-      next: (response) => {
-        localStorage.setItem("cartoon-token", response.token);
-        this.user = response.user;
-        this.authOpen = false;
-        this.name = this.email = this.password = "";
-        this.loadUserData();
-        this.refresh();
-      },
-      error: (error: HttpErrorResponse) => { this.error = this.errorMessage(error); this.refresh(); }
-    });
+    this.user = { id: 'demo-user', name: this.name.trim() || 'Demo explorer', email: '', role: 'admin' };
+    this.authOpen = false; this.name = '';
+    const chosen = this.pendingPlan ?? this.plan; this.pendingPlan = null;
+    this.choosePlan(chosen);
   }
 
-  signOut(): void {
-    localStorage.removeItem("cartoon-token");
-    this.user = null;
-    this.favorites.clear();
-    this.history = [];
-    if (this.list !== "all") this.setList("all");
-  }
+  signOut(): void { this.user = null; this.adminOpen = false; this.deleting = null; this.persist(); }
 
   subscribe(): void {
     if (!/^\S+@\S+\.\S+$/.test(this.subscribeEmail.trim())) return;
     this.subscribed = true;
     this.subscribeEmail = "";
-  }
-
-  private loadCatalog(): void {
-    this.loading = true;
-    this.http.get<Cartoon[]>(`${API}/cartoons`).subscribe({
-      next: (cartoons) => {
-        if (!cartoons.length) { this.useDemo(); return; }
-        this.setCatalog(cartoons);
-        this.http.get<string[]>(`${API}/genres`).subscribe({
-          next: (genres) => { if (genres.length) this.genres = ["All", ...genres]; this.refresh(); },
-          error: () => this.refresh()
-        });
-      },
-      error: () => this.useDemo()
-    });
-  }
-
-  /** Backend is offline or empty, so the page runs on generated demo cartoons. */
-  private useDemo(): void {
-    this.demo = true;
-    this.setCatalog(DEMO_CARTOONS);
   }
 
   private setCatalog(cartoons: Cartoon[]): void {
@@ -287,7 +276,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!byGenre.has(item.genre)) byGenre.set(item.genre, item);
     }
     this.featured = [...byGenre.values()].slice(0, 4);
-    this.cartoons = this.applyFilters(cartoons);
+    this.heroIndex = 0;
+    this.cartoons = this.applyFilters(this.localList());
     this.loading = false;
     this.startHeroTimer();
     this.refresh();
@@ -306,21 +296,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       (!query || `${item.title} ${item.description}`.toLowerCase().includes(query)));
     if (this.sort === "trending") result.sort((a, b) => b.views - a.views);
     else if (this.sort === "rated") result.sort((a, b) => b.rating - a.rating);
-    else if (this.demo) result.sort((a, b) => b.year - a.year);
+    else if (this.demo && this.list !== "history") result.sort((a, b) => b.year - a.year);
     return result;
-  }
-
-  private fetchList<T>(url: string, map: (items: T) => Cartoon[]): void {
-    this.loading = true;
-    this.http.get<T>(url).subscribe({
-      next: (items) => { this.cartoons = this.applyFilters(map(items)); this.loading = false; this.refresh(); },
-      error: (error: HttpErrorResponse) => { this.error = this.errorMessage(error); this.loading = false; this.refresh(); }
-    });
   }
 
   private updateFavorite(id: string, wasFavorite: boolean): void {
     if (wasFavorite) this.favorites.delete(id);
-    else this.favorites.add(id);
+    else { this.favorites.add(id); if (this.selected?._id === id) this.selected = null; }
     this.favorites = new Set(this.favorites);
     if (this.list === "favorites") this.loadCartoons();
     this.refresh();
@@ -335,13 +317,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 6000);
   }
 
-  private autoScrollPicks(): void {
-    const track = this.picksTrack?.nativeElement;
-    if (!track || track.matches(":hover")) return;
-    if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 8) track.scrollTo({ left: 0, behavior: "smooth" });
-    else this.scrollPicks(1);
-  }
-
   /** Drives the hero zoom and the solid header from the scroll position. */
   private paintScroll(): void {
     const y = window.scrollY;
@@ -350,22 +325,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (hero) hero.style.setProperty("--p", Math.min(y / (hero.offsetHeight * 0.8), 1).toFixed(3));
   }
 
-  private loadUserData(): void {
-    this.http.get<Cartoon[]>(`${API}/favorites`).subscribe({
-      next: (items) => { this.favorites = new Set(items.map((item) => item._id)); this.refresh(); },
-      error: (error: HttpErrorResponse) => { this.error = this.errorMessage(error); this.refresh(); }
-    });
-    this.http.get<WatchEntry[]>(`${API}/watch-history`).subscribe({
-      next: (items) => { this.history = items; this.refresh(); },
-      error: (error: HttpErrorResponse) => { this.error = this.errorMessage(error); this.refresh(); }
-    });
+  private persist(): void {
+    try { localStorage.setItem('toonbox-demo', JSON.stringify({ catalog: this.catalog, favorites: [...this.favorites], history: this.history, user: this.user, plan: this.plan })); }
+    catch { /* Interactions remain available for this session. */ }
   }
 
   private refresh(): void {
     this.cdr.markForCheck();
   }
 
-  private errorMessage(error: HttpErrorResponse): string {
-    return error.error?.error || "Could not connect to the API. Check that the backend and database are running.";
-  }
 }

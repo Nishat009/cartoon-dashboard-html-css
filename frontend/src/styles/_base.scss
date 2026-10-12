@@ -1,0 +1,22 @@
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: "Nunito", system-ui, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(900px 600px at 85% 40%, rgba(157, 92, 255, 0.12), transparent 60%),
+    radial-gradient(800px 600px at -10% 70%, rgba(138, 28, 69, 0.25), transparent 60%),
+    var(--bg);
+  overflow-x: hidden;
+}
+img { display: block; max-width: 100%; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; }
+h1, h2, h3, h4 { font-family: var(--display); margin: 0; letter-spacing: -0.01em; }
+em { font-style: normal; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+:focus-visible { outline: 2px solid var(--pink-soft); outline-offset: 3px; }
+
+.container { width: min(1240px, 100% - 48px); margin-inline: auto; }
+
+

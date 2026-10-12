@@ -1,0 +1,3 @@
+@mixin down($width) {
+  @media (max-width: $width) { @content; }
+}

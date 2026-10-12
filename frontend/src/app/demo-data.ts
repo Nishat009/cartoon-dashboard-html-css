@@ -60,6 +60,30 @@ export function seedFrom(text: string): number {
   return Math.abs(hash);
 }
 
+// Local demo artwork; related fictional shows share themed images.
+const DEMO_IMAGES = [
+  "oggy",
+  "spider-man",
+  "minions",
+  "anime-worlds",
+  "captain-america",
+  "curious-bunny",
+  "summer-tales",
+  "tigers-kitchen",
+  "cake-paws",
+  "sweet-safari",
+  "curious-bunny",
+  "anime-worlds",
+  "captain-america",
+  "summer-tales",
+  "curious-bunny",
+  "anime-worlds",
+  "sweet-safari",
+  "cake-paws",
+  "minions",
+  "summer-tales"
+];
+
 const DEMO = [
   { title: "Oggy and the Cockroaches", description: "A laid-back cat faces nonstop chaos from three mischievous cockroaches.", genre: "Comedy", year: 1998, rating: 8.2, episodes: 156, views: 9800, featured: true },
   { title: "Spider-Man: Animated Adventures", description: "A young hero balances everyday life with protecting his city.", genre: "Action", year: 1994, rating: 8.5, episodes: 65, views: 9100, featured: true },
@@ -86,5 +110,5 @@ const DEMO = [
 export const DEMO_CARTOONS: Cartoon[] = DEMO.map((item, index) => ({
   ...item,
   _id: `demo-${index + 1}`,
-  image: poster(index)
+  image: `images/cartoons/${DEMO_IMAGES[index]}.jpg`
 }));
