@@ -1,6 +1,3 @@
-// Starts the API and the Angular dev server together, each on a free port.
-// The API takes the first free port from PORT (default 3000); the web app takes
-// the first free port from WEB_PORT (default 4200) and proxies /api to the API.
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import net from "node:net";
@@ -53,30 +50,10 @@ function stopAll(code) {
   process.exit(code);
 }
 
-/** Starts the API and resolves with the port it listens on, or null if it stopped first. */
-function startApi() {
-  return new Promise((resolve) => {
-    const api = run(["src/server.js"], { cwd: path.join(root, "backend"), stdio: ["ignore", "pipe", "inherit"] });
-    api.stdout.on("data", (chunk) => {
-      process.stdout.write(chunk);
-      const match = /listening on http:\/\/localhost:(\d+)/.exec(chunk.toString());
-      if (match) resolve(Number(match[1]));
-    });
-    // Keep the web app running in demo mode if the API cannot start.
-    api.once("exit", () => resolve(null));
-  });
-}
-
 process.on("SIGINT", () => stopAll(0));
 process.on("SIGTERM", () => stopAll(0));
 
-const apiPort = await startApi();
-if (!apiPort) console.warn("\nThe API did not start, so the web app will run in demo mode.\n");
 const webPort = await freePort(Number(process.env.WEB_PORT || 4200));
-run([ngBin, "serve", "--port", String(webPort)], {
-  cwd: frontend,
-  stdio: "inherit",
-  env: apiPort ? { API_PORT: String(apiPort) } : {}
-});
+run([ngBin, 'serve', '--port', String(webPort)], { cwd: frontend, stdio: 'inherit' });
 running = true;
-console.log(`\nToonbox: http://localhost:${webPort}${apiPort ? `  (API on port ${apiPort})` : ""}\n`);
+console.log('Toonbox: http://localhost:' + webPort);

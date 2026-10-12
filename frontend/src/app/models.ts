@@ -15,11 +15,7 @@ export interface SessionUser {
   id: string;
   name: string;
   email: string;
-}
-
-export interface AuthResponse {
-  token: string;
-  user: SessionUser;
+  role: "user" | "admin";
 }
 
 export interface WatchEntry {

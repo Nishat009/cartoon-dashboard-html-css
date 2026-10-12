@@ -1,0 +1,22 @@
+:root {
+  --bg: #12050e;
+  --bg-2: #1b0816;
+  --surface: #220c1d;
+  --surface-2: #2d1027;
+  --line: rgba(255, 170, 215, 0.12);
+  --line-strong: rgba(255, 170, 215, 0.24);
+  --pink: #ff4fa3;
+  --pink-soft: #ff9ccf;
+  --burgundy: #8a1c45;
+  --burgundy-deep: #4a0b26;
+  --purple: #9d5cff;
+  --purple-soft: #c9a4ff;
+  --text: #fdf0f7;
+  --muted: #bc9db2;
+  --dim: #7f6276;
+  --grad: linear-gradient(120deg, var(--pink) 0%, #d946ef 50%, var(--purple) 100%);
+  --radius: 22px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --display: "Fredoka", "Nunito", system-ui, sans-serif;
+  color-scheme: dark;
+}

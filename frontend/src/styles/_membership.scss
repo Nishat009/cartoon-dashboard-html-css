@@ -1,0 +1,15 @@
+@use 'mixins';
+
+.pricing-grid, .account-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.plan-card { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; padding: 32px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); }
+.plan-card.recommended { border-color: var(--pink); background: linear-gradient(150deg, var(--surface-2), var(--surface)); }
+.plan-card h3 { font-size: 28px; }
+.plan-card p { color: var(--muted); margin: 0; line-height: 1.6; }
+.plan-price { font-family: var(--display); font-size: 52px; }
+.plan-price small { font-size: 15px; color: var(--muted); }
+.plan-card ul { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 16px; }
+.plan-card li { display: flex; align-items: center; gap: 10px; }
+.plan-card li i { color: var(--pink); }
+.plan-card > .pill-btn { margin-top: auto; }
+.plan-card .pill-btn:disabled { opacity: .6; cursor: default; }
+@include mixins.down(980px) { .pricing-grid, .account-grid { grid-template-columns: 1fr; } }
