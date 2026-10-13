@@ -20,7 +20,7 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "styles": [
-              "src/styles.scss"
+              "src/styles.css"
             ],
             "assets": [
               {
@@ -76,7 +76,7 @@
       },
       "schematics": {
         "@schematics/angular:component": {
-          "style": "scss"
+          "style": "css"
         }
       }
     }

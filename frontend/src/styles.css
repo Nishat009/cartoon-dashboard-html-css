@@ -1,0 +1,119 @@
+@import "tailwindcss";
+@import "swiper/css" layer(components);
+@import "swiper/css/effect-coverflow" layer(components);
+@import "swiper/css/pagination" layer(components);
+
+@theme {
+  --font-sans: "Nunito", sans-serif;
+
+  /* Text */
+  --color-ink: #522d2d;
+  --color-ink-dark: #1d0d0d;
+
+  /* Accents from the original glass theme */
+  --color-plum: #7b1595;
+  --color-orchid: #905b97;
+  --color-nav-active: rgba(147, 106, 155, 0.5);
+  --color-grape: #a23a9d;
+  --color-rosewood: #bb7373;
+  --color-blush: #f496fd;
+  --color-lilac: #c8bbff;
+
+  --shadow-glass: 0 0.5px 0 1px rgba(226, 159, 159, 0.23) inset, 0 1px 0 0 rgba(223, 143, 143, 0.6) inset, 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-frame: rgba(221, 221, 221, 0.3) 0px 6px 18px -3px, rgba(221, 221, 221, 0.2) 0px -3px 0px inset;
+  --shadow-frame-lg: rgba(221, 221, 221, 0.3) 0px 8px 18px -3px, rgba(221, 221, 221, 0.2) 0px -3px 0px inset;
+  --shadow-button: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+  --shadow-panel: inset 2px -2px 6px rgba(214, 214, 214, 0.2), inset -3px 3px 3px rgba(255, 255, 255, 0.3);
+  --shadow-control: 0 4px 8px rgba(200, 187, 255, 0.3);
+
+  --animate-spin-slow: spin 18s linear infinite;
+}
+
+@utility section-title {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  font-weight: 700;
+}
+
+/* The frosted panel the music player uses, shared by the newer cards. */
+@utility glass-card {
+  border-radius: 16px;
+  background: rgba(188, 184, 198, 0.2);
+  box-shadow: var(--shadow-panel);
+}
+
+@layer base {
+  body {
+    line-height: normal;
+  }
+
+  img {
+    width: 100%;
+  }
+}
+
+@layer components {
+  /* Swiper renders the pagination bullets, so they are styled here. */
+  .playlist-swiper .swiper-pagination {
+    --swiper-pagination-bottom: -4px;
+  }
+
+  .playlist-swiper .swiper-pagination-bullet {
+    width: 10px;
+    height: 10px;
+    background-color: #524747e7;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .playlist-swiper .swiper-pagination-bullet-active {
+    width: 18px;
+    border-radius: 8px;
+    background-color: var(--color-rosewood);
+  }
+
+  /* Horizontal rows (artists, albums, books...) */
+  .scroll-row::-webkit-scrollbar {
+    height: 10px;
+  }
+
+  .scroll-row::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 0.3rem rgb(79, 78, 79);
+    border-radius: 40px;
+  }
+
+  .scroll-row::-webkit-scrollbar-thumb {
+    box-shadow: inset 0 0 0.5rem rgb(116, 116, 116);
+    background-color: rgba(25, 43, 206, 0.2);
+    outline: none;
+    border-radius: 40px;
+  }
+
+  /* Music player progress bar */
+  .player-progress {
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    margin-bottom: 16px;
+    border-radius: 4px;
+    background: rgba(131, 20, 131, 0.815);
+    cursor: pointer;
+  }
+
+  .player-progress::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    border: 4px solid rgb(234, 229, 255);
+    background: rgb(162, 58, 157);
+    box-shadow: 0 6px 10px rgba(255, 187, 255, 0.4);
+  }
+
+  .player-progress::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 4px solid rgb(234, 229, 255);
+    background: rgb(162, 58, 157);
+    box-shadow: 0 6px 10px rgba(255, 187, 255, 0.4);
+  }
+}
