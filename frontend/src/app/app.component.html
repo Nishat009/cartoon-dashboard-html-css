@@ -1,424 +1,334 @@
-<header class="site-header" #header>
-  <div class="container nav">
-    <a class="brand" href="#top" (click)="$event.preventDefault(); scrollTo('top')" aria-label="Toonbox home">
-      <span class="brand-mark"><i class="fa-solid fa-star"></i></span>TOONBOX
-    </a>
-    <nav class="nav-links" [class.open]="menuOpen">
-      <button (click)="scrollTo('collection')">Collection</button>
-      <button (click)="scrollTo('picks')">Top picks</button>
-      <button (click)="scrollTo('about')">About</button>
-      <button (click)="scrollTo('steps')">How it works</button>
-      <button (click)="scrollTo('pricing')">Pricing</button>
-      @if (user?.role === "admin") { <button (click)="openAdmin()">Admin</button> }
-    </nav>
-    <div class="nav-actions">
-      @if (user) {
-        <button class="pill-btn ghost" (click)="scrollTo('account')"><i class="fa-solid fa-circle-user"></i> {{ user.name }}</button>
-      } @else {
-        <button class="pill-btn" (click)="authOpen = true">Try demo profile</button>
-      }
-      <button class="menu-btn" (click)="menuOpen = !menuOpen" [attr.aria-expanded]="menuOpen" aria-label="Menu"><i class="fa-solid" [class.fa-bars]="!menuOpen" [class.fa-xmark]="menuOpen"></i></button>
-    </div>
-  </div>
-</header>
+<div class="fixed inset-0 -z-10 bg-cover" style="background-image: url('images/bg.jpg')" aria-hidden="true"></div>
 
-<main>
-  <!-- STAGE (full-bleed hero) -->
-  <section class="stage" id="top" #hero>
-    <div class="stage-bg" aria-hidden="true">
-      @for (item of featured; track item._id; let i = $index) {
-        <img [src]="imageUrl(item)" alt="" [class.active]="i === heroIndex" (error)="imageFallback($event, item)">
-      }
-    </div>
-    <div class="stage-shade" aria-hidden="true"></div>
+<div class="flex min-h-screen items-center justify-center">
+  <main class="z-10 m-10 grid w-[95%] max-w-[calc(100%-80px)] grid-cols-[11%_89%] rounded-[15px] border border-[rgba(247,189,189,0.5)] bg-[rgba(223,175,215,0.377)] shadow-glass backdrop-blur-[10px] max-[1500px]:grid-cols-[6%_94%] max-[1310px]:m-[30px] max-[1310px]:max-w-[calc(100%-60px)] max-[1310px]:grid-cols-[8%_92%] max-[910px]:m-5 max-[910px]:max-w-[calc(100%-40px)] max-[910px]:grid-cols-[10%_90%] max-[700px]:grid-cols-[15%_85%] max-[450px]:m-2.5 max-[450px]:max-w-[calc(100%-20px)]">
+    <h1 class="sr-only">Cartoon Lifestyle</h1>
 
-    <div class="container stage-inner">
-      <div class="stage-copy">
-        <h1 class="eyebrow"><span class="dot"></span> Cartoons for every mood</h1>
-        @for (item of current ? [current] : []; track item._id) {
-          <div class="stage-feature">
-            <span class="stage-genre">{{ item.genre }} · {{ item.year }}</span>
-            <h2 class="stage-title">{{ item.title }}</h2>
-            <p class="stage-desc">{{ item.description }}</p>
-            <div class="stage-meta">
-              <span><i class="fa-solid fa-star"></i> {{ item.rating }}/10</span>
-              <span>{{ item.episodes }} episodes</span>
-              <span>{{ item.views.toLocaleString() }} views</span>
-            </div>
-            <div class="stage-actions">
-              <button class="pill-btn big" (click)="openCartoon(item)"><i class="fa-solid fa-play"></i> Watch now</button>
-              <button class="pill-btn ghost big" (click)="toggleFavorite(item)">
-                <i class="fa-solid" [class.fa-check]="favorites.has(item._id)" [class.fa-plus]="!favorites.has(item._id)"></i>
-                {{ favorites.has(item._id) ? 'In my list' : 'My list' }}
-              </button>
-            </div>
-          </div>
-        }
-      </div>
+    <app-sidebar [active]="activeNav()" (navigate)="navigate($event)" />
 
-      <aside class="queue" aria-label="Featured worlds">
-        <p class="queue-label">Up next</p>
-        @for (item of featured; track item._id; let i = $index) {
-          <button class="queue-item" [class.active]="i === heroIndex" [attr.aria-pressed]="i === heroIndex" (click)="selectHero(i)">
-            <img [src]="imageUrl(item)" alt="" (error)="imageFallback($event, item)">
-            <span class="queue-text"><small>{{ item.genre }}</small><b>{{ item.title }}</b></span>
-            <span class="queue-bar"><span></span></span>
-          </button>
-        }
-      </aside>
-    </div>
+    <div class="grid min-w-0 grid-cols-[75%_25%] max-[1500px]:grid-cols-[70%_30%] max-[1100px]:grid-cols-[60%_40%] max-[825px]:grid-cols-[52%_48%] max-[700px]:grid-cols-[100%]">
+      <!-- LEFT CONTENT -->
+      <div class="@container min-w-0 px-5 py-[30px] text-ink max-[1100px]:pt-10 max-[1100px]:pb-5 max-[910px]:pt-[30px]">
 
-    <button class="scroll-cue" (click)="scrollTo('collection')" aria-label="Scroll to the collection"><span></span></button>
-  </section>
+        <section id="playlist" class="scroll-mt-5" aria-labelledby="playlist-title">
+          <h2 id="playlist-title" class="section-title">Popular Playlist</h2>
+          <app-playlist-slider [slides]="slides" />
+        </section>
 
-  <!-- MARQUEE -->
-  @if (catalog.length) {
-    <div class="marquee" aria-hidden="true">
-      <div class="marquee-track">
-        @for (copy of [0, 1]; track copy) {
-          @for (item of catalog; track item._id) { <span>{{ item.title }}</span><i class="fa-solid fa-star"></i> }
-        }
-      </div>
-    </div>
-  }
-
-  <!-- COLLECTION (sidebar + poster wall) -->
-  <section class="section" id="collection">
-    <div class="container browse">
-      <aside class="filters" appReveal>
-        <span class="kicker">The collection</span>
-        <h2>Browse the <em>shelf</em></h2>
-
-        <form class="search" (ngSubmit)="loadCartoons()">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input name="q" [(ngModel)]="search" placeholder="Title, hero, world..." aria-label="Search cartoons">
-          <button type="submit" aria-label="Search"><i class="fa-solid fa-arrow-right"></i></button>
-        </form>
-
-        <div class="filter-group">
-          <h4>Show</h4>
-          <div class="filter-list">
-            <button [class.on]="list === 'all'" (click)="setList('all')"><i class="fa-solid fa-compass"></i> Discover</button>
-            <button [class.on]="list === 'favorites'" (click)="setList('favorites')"><i class="fa-solid fa-heart"></i> My list <span class="count">{{ favorites.size }}</span></button>
-            <button [class.on]="list === 'history'" (click)="setList('history')"><i class="fa-solid fa-clock-rotate-left"></i> Watched <span class="count">{{ history.length }}</span></button>
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <h4>Genre</h4>
-          <div class="filter-list genres">
-            @for (item of genres; track item) {
-              <button [class.on]="genre === item" (click)="setGenre(item)">{{ item }} <span class="count">{{ genreCount(item) }}</span></button>
+        <section aria-labelledby="music-title">
+          <h2 id="music-title" class="section-title mb-6">Featured Music</h2>
+          <div appDragScroll class="flex items-center gap-x-5 pb-3">
+            @for (artist of artists; track $index) {
+              <div class="grid shrink-0 grid-flow-dense grid-rows-[8fr_2fr] items-center max-[1250px]:grid-rows-[7fr_2fr] max-[1100px]:grid-rows-[5fr_2fr] max-[910px]:grid-rows-[4fr_2fr]">
+                <img [src]="artist.image" alt="" draggable="false" loading="lazy"
+                  class="mb-2 aspect-square w-[140px] max-w-none rounded-full border-2 border-[rgba(244,150,253,0.5)] object-cover shadow-frame transition-all duration-200 hover:border-4 hover:border-[rgba(220,150,253,0.6)] max-[1250px]:w-[120px] max-[1100px]:w-[90px] max-[910px]:w-20 max-[700px]:w-[110px] max-[580px]:w-20">
+                <p class="text-center text-[clamp(0.9rem,3vw,1rem)] font-medium">{{ artist.name }}</p>
+              </div>
             }
           </div>
-        </div>
+        </section>
 
-        <div class="filter-group">
-          <h4>Sort</h4>
-          <div class="seg">
-            <button [class.on]="sort === 'new'" (click)="setSort('new')">New</button>
-            <button [class.on]="sort === 'trending'" (click)="setSort('trending')">Trending</button>
-            <button [class.on]="sort === 'rated'" (click)="setSort('rated')">Top rated</button>
-          </div>
-        </div>
-      </aside>
-
-      <div class="shelf">
-        <div class="shelf-head">
-          <p><b>{{ cartoons.length }}</b> {{ cartoons.length === 1 ? 'cartoon' : 'cartoons' }}@if (genre !== 'All') { in <b>{{ genre }}</b> }@if (search.trim()) { for “{{ search.trim() }}” }</p>
-          <button class="link-btn" (click)="resetFilters()">Reset <i class="fa-solid fa-rotate-left"></i></button>
-        </div>
-        @if (demo) { <div class="notice soft"><i class="fa-solid fa-circle-info"></i> Explore the demo catalog. Favorites and history are saved in this browser.</div> }
-        @if (error) { <div class="notice" role="alert">{{ error }} <button (click)="error = ''" aria-label="Dismiss">×</button></div> }
-
-        @if (loading) {
-          <div class="wall">@for (s of [1,2,3,4,5]; track s) { <div class="poster skeleton"></div> }</div>
-        } @else if (!cartoons.length) {
-          <div class="empty"><i class="fa-regular fa-face-smile-wink"></i><h3>No cartoons found</h3><p>Try another search or explore a different genre.</p></div>
-        } @else {
-          <div class="wall">
-            @for (cartoon of cartoons; track cartoon._id; let i = $index) {
-              <article class="poster" [class.w4]="isWide(i, 4)" [class.w3]="isWide(i, 3)" [class.w2]="isWide(i, 2)" appReveal [revealDelay]="(i % 4) * 80" (click)="openCartoon(cartoon)" (keydown.enter)="openCartoon(cartoon)" tabindex="0">
-                <img [src]="imageUrl(cartoon)" [alt]="cartoon.title" loading="lazy" (error)="imageFallback($event, cartoon)">
-                <div class="poster-shade"></div>
-                <span class="poster-rating"><i class="fa-solid fa-star"></i> {{ cartoon.rating }}</span>
-                <button class="heart" [class.liked]="favorites.has(cartoon._id)" (click)="toggleFavorite(cartoon, $event)" [attr.aria-label]="favorites.has(cartoon._id) ? 'Remove from favorites' : 'Add to favorites'"><i class="fa-solid fa-heart"></i></button>
-                <div class="poster-info">
-                  <small>{{ cartoon.genre }} · {{ cartoon.year }}</small>
-                  <h3>{{ cartoon.title }}</h3>
-                  <p>{{ cartoon.episodes }} eps · {{ cartoon.views.toLocaleString() }} views</p>
+        <section id="cartoons" class="scroll-mt-5" aria-labelledby="cartoons-title">
+          <h2 id="cartoons-title" class="section-title mt-[60px] mb-3.5">Recommended Cartoon</h2>
+          <div appDragScroll class="flex items-center gap-x-6 pb-3">
+            @for (album of albums; track album.title) {
+              <div class="grid shrink-0 grid-flow-dense grid-rows-[5fr_2fr] max-[1100px]:grid-rows-[4fr_2fr] max-[910px]:grid-rows-[3fr_2fr]">
+                <div class="relative mb-[15px] aspect-square w-[180px] overflow-hidden rounded-[10px] border-2 border-[rgba(253,150,253,0.5)] shadow-frame-lg max-[1250px]:w-40 max-[1100px]:w-[130px] max-[910px]:w-[100px] max-[700px]:w-[140px] max-[580px]:w-[100px]">
+                  <img [src]="album.image" [alt]="album.title" draggable="false" loading="lazy"
+                    class="absolute inset-0 h-full object-cover transition-transform duration-[800ms] hover:scale-120 hover:rotate-3">
                 </div>
-                <span class="play"><i class="fa-solid fa-play"></i></span>
+                <p class="text-[clamp(0.9rem,4vw,1rem)] opacity-50">{{ album.title }}</p>
+              </div>
+            }
+          </div>
+        </section>
+
+        <!-- GENRES -->
+        <section class="mt-[60px]" aria-labelledby="genres-title">
+          <div class="mb-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+            <h2 id="genres-title" class="section-title">Browse by Genre</h2>
+            <p class="text-[0.85rem] opacity-75">Pick a mood to filter what's trending</p>
+          </div>
+          <div class="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-4">
+            @for (tile of genreTiles; track tile.name) {
+              <button type="button" (click)="browseGenre(tile.name)" [attr.aria-pressed]="genre() === tile.name"
+                class="glass-card flex cursor-pointer flex-col items-center gap-2 border border-[rgba(253,150,253,0.35)] px-3 py-5 transition duration-300 hover:-translate-y-1 hover:bg-white/30 aria-pressed:border-white/70 aria-pressed:bg-nav-active">
+                <span class="grid size-12 place-items-center rounded-full bg-linear-to-br from-[#d38ae0] to-plum text-lg text-white shadow-control">
+                  <i class="fa-solid" [class]="tile.icon" aria-hidden="true"></i>
+                </span>
+                <span class="font-bold">{{ tile.name }}</span>
+                <span class="text-[0.8rem] opacity-75">{{ genreCount(tile.name) }} {{ genreCount(tile.name) === 1 ? 'show' : 'shows' }}</span>
+              </button>
+            }
+          </div>
+        </section>
+
+        <!-- TRENDING -->
+        <section id="trending" class="mt-[60px] scroll-mt-5" aria-labelledby="trending-title">
+          <div class="mb-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+            <h2 id="trending-title" class="section-title">Trending This Week @if (genre() !== 'All') { <span class="font-semibold opacity-70">in {{ genre() }}</span> }</h2>
+            <p class="text-[0.85rem] opacity-75">Most watched by the community</p>
+          </div>
+          <ol class="grid grid-cols-1 gap-4 @xl:grid-cols-2 @5xl:grid-cols-3">
+            @for (cartoon of trending(); track cartoon.id; let i = $index) {
+              <li class="glass-card flex items-center gap-3 p-3 pr-4 transition hover:bg-white/30">
+                <span class="w-9 shrink-0 text-center text-2xl font-black text-plum/45">{{ (i + 1).toString().padStart(2, '0') }}</span>
+                <img [src]="cartoon.image" alt="" loading="lazy" class="size-[72px] shrink-0 rounded-xl border-2 border-[rgba(244,150,253,0.5)] object-cover shadow-frame">
+                <div class="min-w-0 flex-1">
+                  <h3 class="truncate font-bold">{{ cartoon.title }}</h3>
+                  <p class="text-[0.8rem] opacity-80">{{ cartoon.genre }} · <i class="fa-solid fa-star text-[0.7rem]" aria-hidden="true"></i> {{ cartoon.rating }}</p>
+                  <p class="text-[0.8rem] opacity-80">{{ compact(cartoon.views) }} views</p>
+                </div>
+                <app-favorite-button [cartoon]="cartoon" />
+              </li>
+            } @empty {
+              <li class="glass-card p-5 text-center opacity-80">No shows in this genre yet.</li>
+            }
+          </ol>
+        </section>
+
+        <!-- CONTINUE WATCHING -->
+        <section class="mt-[60px]" aria-labelledby="continue-title">
+          <h2 id="continue-title" class="section-title mb-6">Continue Watching</h2>
+          <div appDragScroll class="flex gap-x-5 pb-3">
+            @for (entry of continueWatching; track entry.cartoonId) {
+              <article class="w-[260px] shrink-0 select-none max-[910px]:w-[210px]">
+                <div class="group relative overflow-hidden rounded-xl border-2 border-[rgba(253,150,253,0.5)] shadow-frame-lg">
+                  <img [src]="entry.cartoon.image" [alt]="entry.cartoon.title" draggable="false" loading="lazy" class="aspect-video object-cover transition-transform duration-[800ms] group-hover:scale-110">
+                  <div class="absolute inset-0 bg-[linear-gradient(240deg,transparent,transparent,rgba(123,21,149,0.8))]"></div>
+                  <span class="absolute top-2.5 left-2.5 rounded-md bg-black/40 px-2 py-0.5 text-[0.75rem] font-semibold text-white">{{ entry.episode }}</span>
+                  <span class="absolute inset-0 flex items-center justify-center bg-[rgba(253,150,222,0.45)] text-[1.75rem] text-white opacity-0 transition-opacity duration-[400ms] group-hover:opacity-100" aria-hidden="true">
+                    <i class="fa-solid fa-play"></i>
+                  </span>
+                </div>
+                <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-[#ecc8e9]" role="progressbar" [attr.aria-valuenow]="entry.progress" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="entry.cartoon.title + ' progress'">
+                  <div class="h-full rounded-full bg-grape" [style.width.%]="entry.progress"></div>
+                </div>
+                <h3 class="mt-2.5 truncate font-bold">{{ entry.cartoon.title }}</h3>
+                <p class="text-[0.8rem] opacity-80">{{ entry.minutesLeft }} min left · {{ entry.progress }}% watched</p>
               </article>
             }
           </div>
-        }
-      </div>
-    </div>
-  </section>
+        </section>
 
-  <!-- TOP PICKS (spotlight + leaderboard) -->
-  <section class="section" id="picks">
-    <div class="container">
-      <div class="section-head" appReveal>
-        <div><span class="kicker">Fan favorites</span><h2>The Toonbox <em>Top {{ picks.length }}</em></h2></div>
-        <p>Ranked by fan rating. The shows everyone keeps coming back to.</p>
-      </div>
-      @if (picks[0]; as top) {
-        <div class="ranks">
-          <article class="rank-hero" appReveal (click)="openCartoon(top)" (keydown.enter)="openCartoon(top)" tabindex="0">
-            <img [src]="imageUrl(top)" [alt]="top.title" loading="lazy" (error)="imageFallback($event, top)">
-            <div class="rank-hero-shade"></div>
-            <span class="rank-num big">01</span>
-            <div class="rank-hero-copy">
-              <span class="tag">Fan No.1 · {{ top.genre }}</span>
-              <h3>{{ top.title }}</h3>
-              <p>{{ top.description }}</p>
-              <div class="score"><strong>{{ fanScore(top) }}%</strong><small>of viewers loved it</small></div>
+        <!-- CARTOON OF THE WEEK -->
+        <section class="mt-[60px]" aria-labelledby="spotlight-title">
+          <h2 id="spotlight-title" class="section-title mb-6">Cartoon of the Week</h2>
+          <article class="glass-card grid overflow-hidden border border-[rgba(253,150,253,0.35)] @2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+            <div class="relative min-h-[230px]">
+              <img [src]="spotlight.cartoon.image" [alt]="spotlight.cartoon.title" loading="lazy" class="absolute inset-0 h-full object-cover">
+              <div class="absolute inset-0 bg-[linear-gradient(240deg,transparent,transparent,rgba(123,21,149,0.8))]"></div>
+              <span class="absolute top-4 left-4 inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-[0.75rem] font-bold tracking-wide text-plum uppercase">
+                <i class="fa-solid fa-award" aria-hidden="true"></i> Pick of the week
+              </span>
+            </div>
+            <div class="flex flex-col gap-4 p-6 @2xl:p-8">
+              <div>
+                <p class="text-[0.8rem] font-semibold tracking-wider uppercase opacity-75">
+                  {{ spotlight.cartoon.genre }} · <i class="fa-solid fa-star text-[0.7rem]" aria-hidden="true"></i> {{ spotlight.cartoon.rating }} · {{ compact(spotlight.cartoon.views) }} views
+                </p>
+                <h3 class="mt-1 text-[clamp(1.3rem,3vw,1.9rem)] leading-tight font-extrabold">{{ spotlight.cartoon.title }}</h3>
+              </div>
+              <p class="leading-relaxed opacity-90">{{ spotlight.description }}</p>
+              <ul class="flex flex-wrap gap-2" aria-label="Tags">
+                @for (tag of spotlight.tags; track tag) {
+                  <li class="rounded-full border border-[rgba(253,150,253,0.5)] bg-white/30 px-3 py-1 text-[0.8rem] font-semibold">{{ tag }}</li>
+                }
+              </ul>
+              <div class="mt-auto flex flex-wrap gap-3">
+                <button type="button" (click)="library.toggleFavorite(spotlight.cartoon.id)"
+                  class="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-orchid px-4 py-3 text-[0.85rem] font-semibold text-white uppercase shadow-button transition hover:bg-plum">
+                  <i [class]="isFavorite(spotlight.cartoon) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" aria-hidden="true"></i>
+                  {{ isFavorite(spotlight.cartoon) ? 'In your favorites' : 'Add to favorites' }}
+                </button>
+                <button type="button" (click)="browseGenre(spotlight.cartoon.genre)"
+                  class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[rgba(168,159,167,0.6)] bg-white/30 px-4 py-3 text-[0.85rem] font-semibold uppercase transition hover:bg-white/50">
+                  More {{ spotlight.cartoon.genre }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </button>
+              </div>
             </div>
           </article>
-          <ol class="rank-list">
-            @for (item of picks.slice(1); track item._id; let i = $index) {
-              <li appReveal [revealDelay]="i * 90">
-                <button class="rank-row" (click)="openCartoon(item)">
-                  <span class="rank-num">0{{ i + 2 }}</span>
-                  <img [src]="imageUrl(item)" alt="" loading="lazy" (error)="imageFallback($event, item)">
-                  <span class="rank-text"><b>{{ item.title }}</b><small>{{ item.genre }} · {{ item.year }}</small></span>
-                  <span class="rank-score"><span class="meter"><span [style.width.%]="fanScore(item)"></span></span><b>{{ fanScore(item) }}%</b></span>
+        </section>
+
+        <!-- BOOKS -->
+        <section id="books" class="mt-[60px] scroll-mt-5" aria-labelledby="books-title">
+          <div class="mb-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+            <h2 id="books-title" class="section-title">Comic Book Shelf</h2>
+            <p class="text-[0.85rem] opacity-75">Classics from the cartoonists you love · {{ library.books().size }} saved to read</p>
+          </div>
+          <div appDragScroll class="flex gap-x-6 pt-1 pb-3">
+            @for (book of books; track book.id) {
+              <article class="w-[150px] shrink-0 select-none max-[910px]:w-[124px]">
+                <div class="relative aspect-[2/3] overflow-hidden rounded-l-md rounded-r-xl shadow-frame-lg transition duration-300 hover:-translate-y-1 hover:-rotate-1"
+                  [style.background]="'linear-gradient(160deg, ' + book.colors[0] + ', ' + book.colors[1] + ')'">
+                  <span class="absolute inset-y-0 left-0 w-3 bg-black/15"></span>
+                  <span class="absolute inset-y-0 left-3 w-px bg-white/35"></span>
+                  <i class="fa-solid absolute top-3.5 right-3 text-2xl text-white/85" [class]="book.icon" aria-hidden="true"></i>
+                  <button type="button" (click)="library.toggleBook(book.id)" [attr.aria-pressed]="library.books().has(book.id)" [attr.aria-label]="'Save ' + book.title + ' to read later'"
+                    class="absolute top-2.5 left-5 grid size-8 cursor-pointer place-items-center rounded-full bg-white/85 text-[0.85rem] text-grape transition hover:scale-110">
+                    <i [class]="library.books().has(book.id) ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'" aria-hidden="true"></i>
+                  </button>
+                  <p class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/50 to-transparent p-3 pt-12 pl-5 text-[0.95rem] leading-tight font-extrabold text-white">{{ book.title }}</p>
+                </div>
+                <h3 class="mt-3 truncate font-bold">{{ book.title }}</h3>
+                <p class="truncate text-[0.8rem] opacity-80" [title]="book.author">{{ book.author }}</p>
+                <p class="text-[0.75rem] opacity-65">{{ book.kind }} · {{ book.year }}</p>
+              </article>
+            }
+          </div>
+        </section>
+
+        <!-- FAVORITES -->
+        <section id="favorites" class="mt-[60px] scroll-mt-5" aria-labelledby="favorites-title">
+          <div class="mb-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+            <h2 id="favorites-title" class="section-title">Your Favorites</h2>
+            <p class="text-[0.85rem] opacity-75">{{ favorites().length }} saved in this browser</p>
+          </div>
+          @if (favorites().length) {
+            <div class="grid grid-cols-2 gap-5 @xl:grid-cols-3 @4xl:grid-cols-4">
+              @for (cartoon of favorites(); track cartoon.id) {
+                <article>
+                  <div class="relative overflow-hidden rounded-[10px] border-2 border-[rgba(253,150,253,0.5)] shadow-frame-lg">
+                    <img [src]="cartoon.image" [alt]="cartoon.title" loading="lazy" class="aspect-[4/3] object-cover transition-transform duration-[800ms] hover:scale-120 hover:rotate-3">
+                    <app-favorite-button class="absolute top-2 right-2" [cartoon]="cartoon" />
+                  </div>
+                  <h3 class="mt-3 truncate font-bold">{{ cartoon.title }}</h3>
+                  <p class="text-[0.8rem] opacity-80">{{ cartoon.genre }} · <i class="fa-solid fa-star text-[0.7rem]" aria-hidden="true"></i> {{ cartoon.rating }}</p>
+                </article>
+              }
+            </div>
+          } @else {
+            <div class="glass-card flex flex-col items-center gap-2 border-2 border-dashed border-[rgba(253,150,253,0.5)] px-6 py-10 text-center">
+              <i class="fa-regular fa-heart text-3xl text-grape" aria-hidden="true"></i>
+              <p class="font-bold">No favorites yet</p>
+              <p class="text-[0.9rem] opacity-80">Tap the heart on any cartoon to keep it here.</p>
+            </div>
+          }
+        </section>
+
+        <!-- NEWSLETTER -->
+        <section class="mt-[60px]" aria-labelledby="newsletter-title">
+          <div class="relative overflow-hidden rounded-[20px] border-2 border-[rgba(167,159,168,0.5)] bg-[linear-gradient(240deg,rgba(144,91,151,0.85),rgba(123,21,149,0.92))] p-8 text-white shadow-button max-[580px]:p-6">
+            <span class="absolute -top-16 -right-10 size-48 rounded-full bg-white/10" aria-hidden="true"></span>
+            <span class="absolute -bottom-20 left-1/3 size-40 rounded-full bg-white/10" aria-hidden="true"></span>
+            <div class="relative grid grid-cols-1 gap-6 @3xl:grid-cols-[minmax(0,1fr)_auto] @3xl:items-center">
+              <div>
+                <h2 id="newsletter-title" class="section-title">Never miss a new episode</h2>
+                <p class="mt-2 max-w-md leading-relaxed opacity-90">One friendly email when new cartoons, comics and playlists arrive. No spam, ever.</p>
+              </div>
+              <div>
+                <form class="flex w-full gap-2 @3xl:w-96 max-[450px]:flex-col" (submit)="subscribe($event, email)">
+                  <label class="sr-only" for="newsletter-email">Email address</label>
+                  <input #email id="newsletter-email" type="email" required placeholder="you@example.com" autocomplete="email"
+                    class="min-w-0 flex-1 rounded-xl border border-white/40 bg-white/15 px-4 py-3 text-white outline-none placeholder:text-white/70 focus:border-white focus:bg-white/25">
+                  <button type="submit" class="cursor-pointer rounded-xl bg-white px-5 py-3 font-bold text-plum uppercase shadow-button transition hover:bg-[#f5e9f7]">Subscribe</button>
+                </form>
+                <p class="mt-3 min-h-5 text-[0.85rem]" role="status">
+                  @if (subscribed()) { <i class="fa-solid fa-circle-check" aria-hidden="true"></i> Thanks, you're on the list! (Demo only, no email is sent.) }
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT CONTENT -->
+      <aside class="@container flex min-w-0 flex-col rounded-r-[15px] border-l border-white/50 px-5 py-[30px] text-ink-dark max-[700px]:border-l-0" aria-label="Music and activity">
+        <section aria-labelledby="songs-title">
+          <h2 id="songs-title" class="section-title mb-6">Recommended Songs</h2>
+          <ul>
+            @for (song of songs; track song.title; let i = $index) {
+              <li class="mb-[22px] grid grid-cols-[26%_auto_10%] items-center max-[1250px]:grid-cols-[29%_auto_10%] max-[1100px]:grid-cols-[26%_auto_10%] max-[910px]:grid-cols-[30%_auto_12%] max-[825px]:grid-cols-[28%_auto_10%] max-[700px]:grid-cols-[18%_auto_8%] max-[580px]:grid-cols-[23%_auto_8%] max-[450px]:grid-cols-[25%_auto_8%]"
+                [class]="songVisibility(i)">
+                <div class="group relative w-[60px] rounded-md">
+                  <img [src]="song.image" alt="" loading="lazy" class="aspect-[4/3] rounded-[inherit] border-2 border-[rgba(168,159,168,0.5)] object-cover shadow-frame">
+                  <div class="absolute inset-0 flex cursor-pointer items-center justify-center rounded-[inherit] bg-[rgba(253,150,222,0.6)] text-[1.75rem] opacity-0 transition-all duration-[400ms] ease-linear group-hover:opacity-100" aria-hidden="true">
+                    <i class="fa-solid fa-play"></i>
+                  </div>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-base font-bold">{{ song.title }}</h3>
+                  <p class="text-[0.8rem] font-light opacity-80">{{ song.artist }}</p>
+                </div>
+                <span class="text-[0.8rem] font-light">{{ song.duration }}</span>
+              </li>
+            }
+          </ul>
+        </section>
+
+        <app-music-player class="mt-5" />
+
+        <app-weekly-activity id="activity" class="mt-6 scroll-mt-5" [days]="weeklyActivity" [favorites]="library.favorites().size" />
+
+        <section class="glass-card mt-6 p-5" aria-labelledby="premieres-title">
+          <h2 id="premieres-title" class="mb-4 text-lg font-bold">Upcoming Premieres</h2>
+          <ul class="flex flex-col gap-3">
+            @for (premiere of premieres; track premiere.id) {
+              <li class="flex items-center gap-3">
+                <span class="grid w-12 shrink-0 place-items-center rounded-xl bg-white/45 py-1.5 leading-none shadow-frame">
+                  <span class="text-[0.65rem] font-bold text-plum uppercase">{{ premiere.date | date: 'MMM' }}</span>
+                  <span class="text-lg font-extrabold">{{ premiere.date | date: 'd' }}</span>
+                </span>
+                <div class="min-w-0 flex-1">
+                  <h3 class="truncate text-[0.95rem] font-bold">{{ premiere.title }}</h3>
+                  <p class="truncate text-[0.8rem] opacity-80">{{ premiere.detail }} · {{ premiere.date | date: 'EEE' }}</p>
+                </div>
+                <button type="button" (click)="library.toggleReminder(premiere.id)" [attr.aria-pressed]="library.reminders().has(premiere.id)" [attr.aria-label]="'Remind me about ' + premiere.title"
+                  class="grid size-8 shrink-0 cursor-pointer place-items-center rounded-full bg-white/45 text-[0.85rem] text-grape transition hover:scale-110 aria-pressed:bg-grape aria-pressed:text-white">
+                  <i [class]="library.reminders().has(premiere.id) ? 'fa-solid fa-bell' : 'fa-regular fa-bell'" aria-hidden="true"></i>
                 </button>
               </li>
             }
-          </ol>
-        </div>
-      }
-    </div>
-  </section>
+          </ul>
+        </section>
 
-  <!-- ABOUT (editorial statement + stats band) -->
-  <section class="section" id="about">
-    <div class="container">
-      @if (catalog.length) {
-        <p class="statement" appReveal>
-          Not just a cartoon,
-          <span class="inline-img"><img [src]="imageUrl(catalog[1 % catalog.length])" alt="" loading="lazy" (error)="imageFallback($event, catalog[1 % catalog.length])"></span>
-          but the start of a story
-          <span class="inline-img round"><img [src]="imageUrl(catalog[2 % catalog.length])" alt="" loading="lazy" (error)="imageFallback($event, catalog[2 % catalog.length])"></span>
-          you'll want to <em>watch again</em>
-          <span class="inline-img tilt"><img [src]="imageUrl(catalog[3 % catalog.length])" alt="" loading="lazy" (error)="imageFallback($event, catalog[3 % catalog.length])"></span>
-        </p>
-        <div class="stats-band" appReveal [revealDelay]="120">
-          <div class="stat"><strong [appCountUp]="totalViews"></strong><small>Total views</small></div>
-          <div class="stat"><strong [appCountUp]="totalEpisodes"></strong><small>Episodes to binge</small></div>
-          <div class="stat"><strong [appCountUp]="catalog.length"></strong><small>Cartoon worlds</small></div>
-          <div class="stat"><strong [appCountUp]="genres.length - 1"></strong><small>Genres</small></div>
-        </div>
-      }
-    </div>
-  </section>
-
-  <!-- STEPS (sticky intro + stacked steps) -->
-  <section class="section" id="steps">
-    <div class="container how">
-      <div class="how-intro" appReveal>
-        <span class="kicker">How it works</span>
-        <h2>Three steps to <em>cartoon time</em></h2>
-        <p>No signup needed to browse. No waiting. Just pick a world and start the fun.</p>
-        <button class="pill-btn big" (click)="scrollTo('collection')">Start browsing <i class="fa-solid fa-arrow-right"></i></button>
-      </div>
-      <ol class="how-list">
-        @for (step of steps; track step.title; let i = $index) {
-          <li class="how-step" appReveal [revealDelay]="i * 120">
-            <span class="how-num">0{{ i + 1 }}</span>
-            <div><h3>{{ step.title }}</h3><p>{{ step.text }}</p></div>
-            <span class="how-icon"><i class="fa-solid" [class]="step.icon"></i></span>
-          </li>
-        }
-      </ol>
-    </div>
-  </section>
-
-  <!-- APP (centered phones, features on both sides) -->
-  <section class="section" id="app">
-    <div class="container app-stage" appReveal>
-      <div class="app-head">
-        <span class="kicker">Toonbox on mobile</span>
-        <h2>Take your cartoons <em>anywhere</em></h2>
-        <p>Every world in your pocket, from the bus ride to the bedtime story.</p>
-      </div>
-      <div class="app-layout">
-        <ul class="feats">
-          <li><i class="fa-solid fa-download"></i><b>Offline play</b><small>Download episodes for the road.</small></li>
-          <li><i class="fa-solid fa-child-reaching"></i><b>Kid-safe profiles</b><small>With friendly screen timers.</small></li>
-        </ul>
-        <div class="phones">
-          <div class="phone back">
-            <div class="screen">
-              <div class="ph-bar"><span></span><b>Toonbox</b><span></span></div>
-              <div class="ph-chips"><i class="on"></i><i></i><i></i></div>
-              @for (item of catalog.slice(4, 7); track item._id) {
-                <div class="ph-row"><img [src]="imageUrl(item)" alt="" (error)="imageFallback($event, item)"><div><b>{{ item.title }}</b><small>★ {{ item.rating }}</small></div></div>
-              }
-            </div>
+        <section class="glass-card mt-6 p-5" aria-labelledby="friends-title">
+          <div class="mb-4 flex items-center justify-between gap-2">
+            <h2 id="friends-title" class="text-lg font-bold">Friends Watching</h2>
+            <span class="text-[0.8rem] opacity-75">{{ friends.length }} friends</span>
           </div>
-          <div class="phone front">
-            <div class="screen">
-              <div class="ph-bar"><span></span><b>Now playing</b><span></span></div>
-              @if (catalog[0]; as top) {
-                <img class="ph-hero" [src]="imageUrl(top)" alt="" (error)="imageFallback($event, top)">
-                <b class="ph-title">{{ top.title }}</b>
-                <small class="ph-sub">{{ top.genre }} · {{ top.episodes }} episodes</small>
-              }
-              <div class="ph-progress"><span></span></div>
-              <div class="ph-controls"><i class="fa-solid fa-backward"></i><span><i class="fa-solid fa-pause"></i></span><i class="fa-solid fa-forward"></i></div>
-              <div class="ph-cta">Continue watching</div>
-            </div>
+          <ul class="flex flex-col gap-3.5">
+            @for (friend of friends; track friend.name) {
+              <li class="flex items-center gap-3">
+                <span class="relative grid size-10 shrink-0 place-items-center rounded-full text-[0.85rem] font-bold text-white" [style.background-color]="friend.color" aria-hidden="true">
+                  {{ initials(friend.name) }}
+                  @if (friend.live) { <span class="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-white bg-[#1f9d62]"></span> }
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-[0.95rem] font-bold">{{ friend.name }}</p>
+                  <p class="truncate text-[0.8rem] opacity-80"><i class="fa-solid fa-tv text-[0.7rem]" aria-hidden="true"></i> {{ friend.watching }}</p>
+                </div>
+                <span class="shrink-0 text-[0.75rem] opacity-75" [class.font-bold]="friend.live">{{ friend.when }}</span>
+              </li>
+            }
+          </ul>
+        </section>
+
+        <section class="glass-card sticky top-5 mt-6 p-5 max-[700px]:static" aria-labelledby="trivia-title">
+          <div class="mb-3 flex items-center gap-2.5">
+            <span class="grid size-8 place-items-center rounded-full bg-orchid text-[0.85rem] text-white" aria-hidden="true"><i class="fa-solid fa-lightbulb"></i></span>
+            <h2 id="trivia-title" class="text-lg font-bold">Toon Trivia</h2>
           </div>
-        </div>
-        <ul class="feats">
-          <li><i class="fa-solid fa-rotate"></i><b>Synced favorites</b><small>Your list on every device.</small></li>
-          <li><i class="fa-solid fa-bell"></i><b>Friday alerts</b><small>Know when new episodes land.</small></li>
-        </ul>
-      </div>
-      <div class="stores">
-        <button class="store"><i class="fa-brands fa-google-play"></i><span><small>Get it on</small>Google Play</span></button>
-        <button class="store"><i class="fa-brands fa-apple"></i><span><small>Download on</small>App Store</span></button>
-      </div>
-    </div>
-  </section>
-  <section class="section" id="pricing">
-    <div class="container">
-      <div class="section-head"><div><span class="kicker">Simple plans, happy explorers</span><h2>Your world. <em>Your plan.</em></h2><p>Explore membership with our interactive demo. All prices are sample USD monthly prices; no payment is collected.</p></div></div>
-      <div class="pricing-grid">
-        @for (item of plans; track item.id) {
-          <article class="plan-card" [class.recommended]="item.id === 'plus'">
-            <span class="kicker">{{ item.id === 'plus' ? 'Most popular' : item.id === 'family' ? 'Explore together' : 'Start exploring' }}</span>
-            <h3>{{ item.name }}</h3><p>{{ item.description }}</p>
-            <div class="plan-price">${{ item.price }}<small>/ month</small></div>
-            <ul>@for (feature of item.features; track feature) { <li><i class="fa-solid fa-check"></i> {{ feature }}</li> }</ul>
-            <button class="pill-btn big" (click)="choosePlan(item.id)" [disabled]="!!user && plan === item.id">{{ user && plan === item.id ? 'Current plan' : item.price ? 'Try ' + item.name : 'Get started free' }}</button>
-          </article>
-        }
-      </div>
-    </div>
-  </section>
-  @if (user) {
-    <section class="section" id="account">
-      <div class="container">
-        <div class="section-head"><div><span class="kicker">Your account</span><h2>Welcome back, <em>{{ user.name }}</em></h2><p>Your library and membership, all in one place.</p></div><button class="pill-btn ghost" (click)="signOut()">Sign out</button></div>
-        @if (accountMessage) { <p class="notice soft" role="status">{{ accountMessage }}</p> }
-        <div class="account-grid">
-          <article class="plan-card"><span class="kicker">Membership</span><h3>{{ currentPlan.name }}</h3><p>Demo membership ? ${{ currentPlan.price }}/month</p><button class="pill-btn" (click)="scrollTo('pricing')">Manage plan</button>@if (plan !== 'free') { <button class="link-btn" (click)="choosePlan('free')">Switch to Starter</button> }</article>
-          <article class="plan-card"><span class="kicker">Your library</span><h3>{{ favorites.size }} favorites</h3><p>{{ history.length }} recently explored worlds</p><button class="pill-btn" (click)="setList('favorites'); scrollTo('collection')">Open my list</button><button class="link-btn" (click)="setList('history'); scrollTo('collection')">View history</button></article>
-          <article class="plan-card"><span class="kicker">Studio preview</span><h3>Curate your collection</h3><p>Add a new world or update your demo catalog.</p><button class="pill-btn" (click)="openAdmin()">Open studio</button></article>
-        </div>
-      </div>
-    </section>
-  }
-  @if (user?.role === 'admin' && adminOpen) {
-    <section class="section" id="admin">
-      <div class="container">
-        <div class="section-head"><div><span class="kicker">Admin workspace</span><h2>Manage your <em>cartoons</em></h2></div><button class="pill-btn" (click)="editCartoon()" [disabled]="adminSaving">New cartoon <i class="fa-solid fa-plus"></i></button></div>
-        @if (demo) { <div class="notice" role="alert">Changes are saved only in this browser.</div> }
-        @if (adminError) { <div class="notice" role="alert">{{ adminError }}</div> }
-        @if (adminMessage) { <div class="notice soft" role="status">{{ adminMessage }}</div> }
-        <div class="admin-layout">
-          <form class="admin-form" #cartoonForm="ngForm" (ngSubmit)="saveCartoon()">
-            <h3>{{ editingId ? 'Edit cartoon' : 'Create cartoon' }}</h3>
-            <fieldset [disabled]="adminSaving">
-              <label>Title<input name="title" [(ngModel)]="draft.title" required></label>
-              <label>Description<textarea name="description" [(ngModel)]="draft.description" required rows="4"></textarea></label>
-              <label>Genre<input name="genre" [(ngModel)]="draft.genre" required list="admin-genres"></label>
-              <datalist id="admin-genres">@for (item of genres.slice(1); track item) { <option [value]="item"></option> }</datalist>
-              <div class="admin-fields">
-                <label>Year<input name="year" type="number" [(ngModel)]="draft.year" min="0" step="1" required></label>
-                <label>Rating / 10<input name="rating" type="number" [(ngModel)]="draft.rating" min="0" max="10" step="0.1" required></label>
-                <label>Episodes<input name="episodes" type="number" [(ngModel)]="draft.episodes" min="0" step="1" required></label>
-                <label>Views<input name="views" type="number" [(ngModel)]="draft.views" min="0" step="1" required></label>
-              </div>
-              <label>Poster URL<input name="image" [(ngModel)]="draft.image" placeholder="https://..."><small>Leave blank for a generated poster.</small></label>
-              <label class="admin-check"><input name="featured" type="checkbox" [(ngModel)]="draft.featured"> Featured cartoon</label>
-              <div class="admin-actions"><button class="pill-btn" type="submit" [disabled]="cartoonForm.invalid || adminSaving">{{ adminSaving ? 'Saving...' : 'Save cartoon' }}</button>@if (editingId) { <button class="pill-btn ghost" type="button" (click)="editCartoon()">Cancel edit</button> }</div>
-            </fieldset>
-          </form>
-          <div class="admin-catalog">
-            <p class="kicker">{{ catalog.length }} cartoons</p>
-            @for (item of catalog; track item._id) {
-              <article class="admin-row">
-                <img [src]="imageUrl(item)" [alt]="item.title" (error)="imageFallback($event, item)">
-                <div><h3>{{ item.title }}</h3><small>{{ item.genre }} ? {{ item.year }} ? {{ item.episodes }} episodes</small></div>
-                <div class="admin-actions"><button class="pill-btn ghost" (click)="editCartoon(item)" [disabled]="adminSaving">Edit</button><button class="link-btn" (click)="deleting = item" [disabled]="adminSaving">Delete</button></div>
-              </article>
-            } @empty { <div class="empty"><h3>No cartoons yet</h3><p>Create your first cartoon using the form.</p></div> }
+          <p class="min-h-[4.5rem] leading-relaxed" aria-live="polite">{{ trivia[factIndex()] }}</p>
+          <div class="mt-4 flex items-center justify-between gap-2">
+            <span class="text-[0.8rem] opacity-75">{{ factIndex() + 1 }} / {{ trivia.length }}</span>
+            <button type="button" (click)="nextFact()" class="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-orchid px-3 py-2 text-[0.8rem] font-bold text-white uppercase shadow-button transition hover:bg-plum">
+              Next fact <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </button>
           </div>
-        </div>
-      </div>
-    </section>
-  }
-</main>
+        </section>
+      </aside>
 
-<footer class="footer">
-  <div class="container">
-    <div class="cta" appReveal>
-      <span class="kicker">Get updates</span>
-      <h2>Ready for <em>cartoon time?</em></h2>
-      <p>One friendly email when new episodes land. No spam, ever.</p>
-      <form class="subscribe" (ngSubmit)="subscribe()">
-        <input name="subscribeEmail" type="email" [(ngModel)]="subscribeEmail" placeholder="Enter your email" aria-label="Email address" required>
-        <button class="pill-btn" type="submit">Subscribe</button>
-      </form>
-      @if (subscribed) { <p class="sub-ok"><i class="fa-solid fa-circle-check"></i> Demo subscription complete. No email will be sent.</p> }
+      <footer class="col-span-full flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-white/50 px-5 py-5 text-[0.85rem] text-ink">
+        <p>© {{ year }} Cartoon Lifestyle · Good stories have no age limit.</p>
+        <nav aria-label="Footer">
+          <ul class="flex flex-wrap gap-x-5 gap-y-1">
+            @for (link of footerLinks; track link.label) {
+              <li><button type="button" (click)="navigate(link.item)" class="cursor-pointer hover:underline">{{ link.label }}</button></li>
+            }
+          </ul>
+        </nav>
+      </footer>
     </div>
-    <div class="footer-bar">
-      <a class="brand" href="#top" (click)="$event.preventDefault(); scrollTo('top')"><span class="brand-mark"><i class="fa-solid fa-star"></i></span>TOONBOX</a>
-      <nav class="footer-links" aria-label="Footer">
-        <button (click)="scrollTo('collection')">Collection</button>
-        <button (click)="scrollTo('picks')">Top picks</button>
-        <button (click)="scrollTo('steps')">How it works</button>
-        <button (click)="scrollTo('app')">App</button>
-        <a href="#">Parents guide</a>
-        <a href="#">Privacy</a>
-        <a href="#">Terms</a>
-      </nav>
-    </div>
-    <div class="footer-word" aria-hidden="true">TOONBOX</div>
-    <p class="copy">Good stories have no age limit ✳ © 2026 Toonbox</p>
-  </div>
-</footer>
-
-@if (selected) {
-  <div class="modal-backdrop" (click)="selected = null" (keydown.escape)="selected = null">
-    <section class="detail-modal" role="dialog" aria-modal="true" [attr.aria-label]="selected.title" (click)="$event.stopPropagation()">
-      <button class="modal-close" (click)="selected = null" aria-label="Close">×</button>
-      <img class="detail-image" [src]="imageUrl(selected)" [alt]="selected.title" (error)="imageFallback($event, selected)">
-      <div class="detail-body">
-        <span class="kicker">{{ selected.genre }} · {{ selected.year }}</span>
-        <h2>{{ selected.title }}</h2>
-        <p>{{ selected.description }}</p>
-        <div class="detail-stats"><span><i class="fa-solid fa-star"></i> {{ selected.rating }} rating</span><span>{{ selected.episodes }} episodes</span><span>{{ selected.views.toLocaleString() }} views</span></div>
-        <button class="pill-btn big" (click)="toggleFavorite(selected)"><i class="fa-solid fa-heart"></i> {{ favorites.has(selected._id) ? 'Remove favorite' : 'Add to favorites' }}</button>
-      </div>
-    </section>
-  </div>
-}
-
-@if (authOpen) {
-  <div class="modal-backdrop" (click)="authOpen = false">
-    <form class="auth-modal" (ngSubmit)="submitAuth()" (click)="$event.stopPropagation()">
-      <button type="button" class="modal-close" (click)="authOpen = false" aria-label="Close">×</button>
-      <span class="kicker">Demo profile</span><h2>Your cartoon world</h2><p>Create a demo explorer profile to manage your library and try a membership. Your profile stays in this browser.</p>
-      <label>Your name<input name="name" [(ngModel)]="name" maxlength="60" placeholder="Demo explorer"></label>
-      <button class="pill-btn big" type="submit">Continue with demo profile</button>
-    </form>
-  </div>
-}
-
-@if (deleting && adminOpen && user?.role === 'admin') {
-  <div class="modal-backdrop" (keydown.escape)="!adminSaving && (deleting = null)">
-    <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
-      <h2 id="delete-title">Delete {{ deleting.title }}?</h2>
-      <p>This removes the cartoon from the collection, favorites and watch history.</p>
-      @if (adminError) { <div class="notice" role="alert">{{ adminError }}</div> }
-      <div class="admin-actions"><button class="pill-btn" (click)="deleteCartoon()" [disabled]="adminSaving">{{ adminSaving ? 'Deleting...' : 'Delete cartoon' }}</button><button class="pill-btn ghost" (click)="deleting = null" [disabled]="adminSaving">Cancel</button></div>
-    </section>
-  </div>
-}
+  </main>
+</div>
