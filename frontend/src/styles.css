@@ -26,12 +26,38 @@
   --shadow-panel: inset 2px -2px 6px rgba(214, 214, 214, 0.2), inset -3px 3px 3px rgba(255, 255, 255, 0.3);
   --shadow-control: 0 4px 8px rgba(200, 187, 255, 0.3);
 
+  --shadow-glow: 0 10px 28px -8px rgba(123, 21, 149, 0.45);
+
   --animate-spin-slow: spin 18s linear infinite;
+  --animate-equalizer: equalizer 0.9s ease-in-out infinite alternate;
+  --animate-float: float 4s ease-in-out infinite;
+
+  @keyframes equalizer {
+    from { transform: scaleY(0.3); }
+    to { transform: scaleY(1); }
+  }
+
+  @keyframes float {
+    50% { transform: translateY(-4px); }
+  }
 }
 
+/* Section headings carry a small gradient bar in front of the text. */
 @utility section-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.6rem;
   font-size: clamp(1.2rem, 3vw, 1.5rem);
   font-weight: 700;
+
+  &::before {
+    content: "";
+    width: 6px;
+    height: 1.1em;
+    border-radius: 6px;
+    background: linear-gradient(180deg, var(--color-blush), var(--color-plum));
+  }
 }
 
 /* The frosted panel the music player uses, shared by the newer cards. */
@@ -41,9 +67,29 @@
   box-shadow: var(--shadow-panel);
 }
 
+/* Gradient text, e.g. the trending rank numbers. */
+@utility text-gradient {
+  background: linear-gradient(135deg, var(--color-grape), var(--color-blush));
+  background-clip: text;
+  color: transparent;
+}
+
 @layer base {
+  html {
+    scrollbar-color: rgba(123, 21, 149, 0.45) transparent;
+  }
+
   body {
     line-height: normal;
+  }
+
+  ::selection {
+    background: rgba(244, 150, 253, 0.45);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-plum);
+    outline-offset: 2px;
   }
 
   img {
@@ -72,29 +118,47 @@
 
   /* Horizontal rows (artists, albums, books...) */
   .scroll-row::-webkit-scrollbar {
-    height: 10px;
+    height: 8px;
   }
 
   .scroll-row::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 0.3rem rgb(79, 78, 79);
+    background: rgba(255, 255, 255, 0.25);
     border-radius: 40px;
   }
 
   .scroll-row::-webkit-scrollbar-thumb {
-    box-shadow: inset 0 0 0.5rem rgb(116, 116, 116);
-    background-color: rgba(25, 43, 206, 0.2);
-    outline: none;
+    background: linear-gradient(90deg, var(--color-orchid), var(--color-grape));
     border-radius: 40px;
   }
 
-  /* Music player progress bar */
+  /* Sections fade up as they scroll into view (see reveal.directive.ts). */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+
+  /* Music player progress bar; --progress is the played share (0-100%). */
   .player-progress {
     appearance: none;
     width: 100%;
     height: 6px;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
     border-radius: 4px;
-    background: rgba(131, 20, 131, 0.815);
+    background: linear-gradient(90deg, var(--color-grape), var(--color-blush)) 0 / var(--progress, 0%) 100% no-repeat, rgba(131, 20, 131, 0.25);
     cursor: pointer;
   }
 
