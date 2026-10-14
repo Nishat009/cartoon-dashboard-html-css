@@ -2,7 +2,7 @@ import { DatePipe } from "@angular/common";
 import { Component, DestroyRef, NgZone, afterNextRender, computed, inject, signal } from "@angular/core";
 import {
   ALBUMS, ARTISTS, BOOKS, CARTOONS, CONTINUE_WATCHING, FRIENDS, GENRE_TILES, PREMIERES, PRIMARY_NAV,
-  SLIDES, SONGS, SPOTLIGHT, TRIVIA, WEEKLY_ACTIVITY
+  SLIDES, SONGS, SPOTLIGHT, TRIVIA, USER, WEEKLY_ACTIVITY
 } from "./dashboard-data";
 import { DragScrollDirective } from "./drag-scroll.directive";
 import { FavoriteButtonComponent } from "./favorite-button.component";
@@ -10,6 +10,7 @@ import { LibraryService } from "./library.service";
 import { Cartoon, GenreTile, NavItem } from "./models";
 import { MusicPlayerComponent } from "./music-player.component";
 import { PlaylistSliderComponent } from "./playlist-slider.component";
+import { RevealDirective } from "./reveal.directive";
 import { SidebarComponent } from "./sidebar.component";
 import { WeeklyActivityComponent } from "./weekly-activity.component";
 
@@ -17,9 +18,16 @@ const compactNumber = new Intl.NumberFormat("en", { notation: "compact", maximum
 const FOOTER_LABELS: Record<string, string> = { playlist: "Playlist", trending: "Trending", books: "Comic books", cartoons: "Cartoons", favorites: "Favorites" };
 const byId = new Map(CARTOONS.map((cartoon) => [cartoon.id, cartoon]));
 
+function greetingFor(hour: number): string {
+  if (hour < 5) return "Good night";
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 @Component({
   selector: "app-root",
-  imports: [DatePipe, DragScrollDirective, FavoriteButtonComponent, MusicPlayerComponent, PlaylistSliderComponent, SidebarComponent, WeeklyActivityComponent],
+  imports: [DatePipe, DragScrollDirective, FavoriteButtonComponent, MusicPlayerComponent, PlaylistSliderComponent, RevealDirective, SidebarComponent, WeeklyActivityComponent],
   templateUrl: "./app.component.html"
 })
 export class AppComponent {
@@ -37,6 +45,8 @@ export class AppComponent {
   protected readonly trivia = TRIVIA;
   protected readonly footerLinks = PRIMARY_NAV.map((item) => ({ item, label: FOOTER_LABELS[item.section!] }));
   protected readonly year = new Date().getFullYear();
+  protected readonly firstName = USER.name.split(" ")[0];
+  protected readonly greeting = greetingFor(new Date().getHours());
 
   protected readonly continueWatching = CONTINUE_WATCHING.map((entry) => ({ ...entry, cartoon: byId.get(entry.cartoonId)! }));
   protected readonly spotlight = { ...SPOTLIGHT, cartoon: byId.get(SPOTLIGHT.cartoonId)! };
@@ -45,9 +55,12 @@ export class AppComponent {
   protected readonly genre = signal<GenreTile["name"]>("All");
   protected readonly factIndex = signal(0);
   protected readonly subscribed = signal(false);
+  protected readonly query = signal("");
+  protected readonly showTop = signal(false);
 
   protected readonly trending = computed(() => CARTOONS
     .filter((cartoon) => this.genre() === "All" || cartoon.genre === this.genre())
+    .filter((cartoon) => cartoon.title.toLowerCase().includes(this.query().trim().toLowerCase()))
     .sort((a, b) => b.views - a.views)
     .slice(0, 6));
   protected readonly favorites = computed(() => CARTOONS.filter((cartoon) => this.library.favorites().has(cartoon.id)));
@@ -64,6 +77,8 @@ export class AppComponent {
       frame = requestAnimationFrame(() => {
         const label = this.sectionInView();
         if (label && label !== this.activeNav()) zone.run(() => this.activeNav.set(label));
+        const showTop = window.scrollY > window.innerHeight;
+        if (showTop !== this.showTop()) zone.run(() => this.showTop.set(showTop));
       });
     };
     const onScrollEnd = () => (this.spyPaused = false);
@@ -89,6 +104,20 @@ export class AppComponent {
     // Fallback for browsers without the scrollend event.
     this.spyTimer = setTimeout(() => (this.spyPaused = false), 1200);
     section.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  protected search(value: string): void {
+    this.query.set(value);
+  }
+
+  /** Enter in the search box jumps to the filtered results. */
+  protected showResults(event: Event): void {
+    event.preventDefault();
+    this.navigate(PRIMARY_NAV.find((item) => item.section === "trending")!);
+  }
+
+  protected scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   protected browseGenre(genre: GenreTile["name"]): void {
