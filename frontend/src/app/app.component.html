@@ -10,41 +10,59 @@
       <!-- LEFT CONTENT -->
       <div class="@container min-w-0 px-5 py-[30px] text-ink max-[1100px]:pt-10 max-[1100px]:pb-5 max-[910px]:pt-[30px]">
 
+        <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p class="flex items-center gap-2 text-[0.9rem] font-semibold text-plum/80">
+              <i class="fa-solid fa-hand animate-float text-[#e0a64c] motion-reduce:animate-none" aria-hidden="true"></i> {{ greeting }}, {{ firstName }}
+            </p>
+            <p class="mt-1 text-[clamp(1.3rem,3vw,1.9rem)] leading-tight font-extrabold text-ink-dark">What are we watching today?</p>
+          </div>
+          <form role="search" class="relative w-full max-w-xs max-[1100px]:max-w-none" (submit)="showResults($event)">
+            <label for="search" class="sr-only">Search cartoons</label>
+            <i class="fa-solid fa-magnifying-glass pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-plum/70" aria-hidden="true"></i>
+            <input id="search" type="search" placeholder="Search cartoons..." autocomplete="off" [value]="query()" (input)="search($any($event.target).value)"
+              class="w-full rounded-full border border-white/60 bg-white/35 py-2.5 pr-4 pl-11 text-ink-dark shadow-panel backdrop-blur-sm transition outline-none placeholder:text-ink/60 focus:border-white focus:bg-white/60 focus:shadow-glow">
+          </form>
+        </header>
+
         <section id="playlist" class="scroll-mt-5" aria-labelledby="playlist-title">
           <h2 id="playlist-title" class="section-title">Popular Playlist</h2>
           <app-playlist-slider [slides]="slides" />
         </section>
 
-        <section aria-labelledby="music-title">
+        <section appReveal aria-labelledby="music-title">
           <h2 id="music-title" class="section-title mb-6">Featured Music</h2>
           <div appDragScroll class="flex items-center gap-x-5 pb-3">
             @for (artist of artists; track $index) {
               <div class="grid shrink-0 grid-flow-dense grid-rows-[8fr_2fr] items-center max-[1250px]:grid-rows-[7fr_2fr] max-[1100px]:grid-rows-[5fr_2fr] max-[910px]:grid-rows-[4fr_2fr]">
                 <img [src]="artist.image" alt="" draggable="false" loading="lazy"
-                  class="mb-2 aspect-square w-[140px] max-w-none rounded-full border-2 border-[rgba(244,150,253,0.5)] object-cover shadow-frame transition-all duration-200 hover:border-4 hover:border-[rgba(220,150,253,0.6)] max-[1250px]:w-[120px] max-[1100px]:w-[90px] max-[910px]:w-20 max-[700px]:w-[110px] max-[580px]:w-20">
+                  class="mb-2 aspect-square w-[140px] max-w-none rounded-full border-2 border-[rgba(244,150,253,0.5)] object-cover shadow-frame transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(220,150,253,0.95)] hover:shadow-glow max-[1250px]:w-[120px] max-[1100px]:w-[90px] max-[910px]:w-20 max-[700px]:w-[110px] max-[580px]:w-20">
                 <p class="text-center text-[clamp(0.9rem,3vw,1rem)] font-medium">{{ artist.name }}</p>
               </div>
             }
           </div>
         </section>
 
-        <section id="cartoons" class="scroll-mt-5" aria-labelledby="cartoons-title">
+        <section appReveal id="cartoons" class="scroll-mt-5" aria-labelledby="cartoons-title">
           <h2 id="cartoons-title" class="section-title mt-[60px] mb-3.5">Recommended Cartoon</h2>
           <div appDragScroll class="flex items-center gap-x-6 pb-3">
             @for (album of albums; track album.title) {
-              <div class="grid shrink-0 grid-flow-dense grid-rows-[5fr_2fr] max-[1100px]:grid-rows-[4fr_2fr] max-[910px]:grid-rows-[3fr_2fr]">
+              <div class="group grid shrink-0 grid-flow-dense grid-rows-[5fr_2fr] max-[1100px]:grid-rows-[4fr_2fr] max-[910px]:grid-rows-[3fr_2fr]">
                 <div class="relative mb-[15px] aspect-square w-[180px] overflow-hidden rounded-[10px] border-2 border-[rgba(253,150,253,0.5)] shadow-frame-lg max-[1250px]:w-40 max-[1100px]:w-[130px] max-[910px]:w-[100px] max-[700px]:w-[140px] max-[580px]:w-[100px]">
                   <img [src]="album.image" [alt]="album.title" draggable="false" loading="lazy"
-                    class="absolute inset-0 h-full object-cover transition-transform duration-[800ms] hover:scale-120 hover:rotate-3">
+                    class="absolute inset-0 h-full object-cover transition-transform duration-[800ms] group-hover:scale-120 group-hover:rotate-3">
+                  <span class="absolute inset-0 flex items-center justify-center bg-linear-to-t from-[rgba(123,21,149,0.75)] to-transparent text-3xl text-white opacity-0 transition-opacity duration-500 group-hover:opacity-100" aria-hidden="true">
+                    <i class="fa-solid fa-circle-play drop-shadow-lg"></i>
+                  </span>
                 </div>
-                <p class="text-[clamp(0.9rem,4vw,1rem)] opacity-50">{{ album.title }}</p>
+                <p class="text-[clamp(0.9rem,4vw,1rem)] font-semibold opacity-70 transition group-hover:text-plum group-hover:opacity-100">{{ album.title }}</p>
               </div>
             }
           </div>
         </section>
 
         <!-- GENRES -->
-        <section class="mt-[60px]" aria-labelledby="genres-title">
+        <section appReveal class="mt-[60px]" aria-labelledby="genres-title">
           <div class="mb-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
             <h2 id="genres-title" class="section-title">Browse by Genre</h2>
             <p class="text-[0.85rem] opacity-75">Pick a mood to filter what's trending</p>
@@ -52,8 +70,8 @@
           <div class="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-4">
             @for (tile of genreTiles; track tile.name) {
               <button type="button" (click)="browseGenre(tile.name)" [attr.aria-pressed]="genre() === tile.name"
-                class="glass-card flex cursor-pointer flex-col items-center gap-2 border border-[rgba(253,150,253,0.35)] px-3 py-5 transition duration-300 hover:-translate-y-1 hover:bg-white/30 aria-pressed:border-white/70 aria-pressed:bg-nav-active">
-                <span class="grid size-12 place-items-center rounded-full bg-linear-to-br from-[#d38ae0] to-plum text-lg text-white shadow-control">
+                class="group glass-card flex cursor-pointer flex-col items-center gap-2 border border-[rgba(253,150,253,0.35)] px-3 py-5 transition duration-300 hover:-translate-y-1 hover:bg-white/30 hover:shadow-glow aria-pressed:border-white/80 aria-pressed:bg-nav-active aria-pressed:shadow-glow">
+                <span class="grid size-12 place-items-center rounded-full transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 bg-linear-to-br from-[#d38ae0] to-plum text-lg text-white shadow-control">
                   <i class="fa-solid" [class]="tile.icon" aria-hidden="true"></i>
                 </span>
                 <span class="font-bold">{{ tile.name }}</span>
@@ -64,15 +82,15 @@
         </section>
 
         <!-- TRENDING -->
-        <section id="trending" class="mt-[60px] scroll-mt-5" aria-labelledby="trending-title">
+        <section appReveal id="trending" class="mt-[60px] scroll-mt-5" aria-labelledby="trending-title">
           <div class="mb-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
             <h2 id="trending-title" class="section-title">Trending This Week @if (genre() !== 'All') { <span class="font-semibold opacity-70">in {{ genre() }}</span> }</h2>
             <p class="text-[0.85rem] opacity-75">Most watched by the community</p>
           </div>
           <ol class="grid grid-cols-1 gap-4 @xl:grid-cols-2 @5xl:grid-cols-3">
             @for (cartoon of trending(); track cartoon.id; let i = $index) {
-              <li class="glass-card flex items-center gap-3 p-3 pr-4 transition hover:bg-white/30">
-                <span class="w-9 shrink-0 text-center text-2xl font-black text-plum/45">{{ (i + 1).toString().padStart(2, '0') }}</span>
+              <li class="glass-card flex items-center gap-3 p-3 pr-4 transition duration-300 hover:-translate-y-0.5 hover:bg-white/30 hover:shadow-glow">
+                <span class="w-9 shrink-0 text-center text-gradient text-2xl font-black">{{ (i + 1).toString().padStart(2, '0') }}</span>
                 <img [src]="cartoon.image" alt="" loading="lazy" class="size-[72px] shrink-0 rounded-xl border-2 border-[rgba(244,150,253,0.5)] object-cover shadow-frame">
                 <div class="min-w-0 flex-1">
                   <h3 class="truncate font-bold">{{ cartoon.title }}</h3>
@@ -82,13 +100,13 @@
                 <app-favorite-button [cartoon]="cartoon" />
               </li>
             } @empty {
-              <li class="glass-card p-5 text-center opacity-80">No shows in this genre yet.</li>
+              <li class="glass-card p-5 text-center opacity-80 @xl:col-span-full">{{ query().trim() ? 'No shows match "' + query().trim() + '".' : 'No shows in this genre yet.' }}</li>
             }
           </ol>
         </section>
 
         <!-- CONTINUE WATCHING -->
-        <section class="mt-[60px]" aria-labelledby="continue-title">
+        <section appReveal class="mt-[60px]" aria-labelledby="continue-title">
           <h2 id="continue-title" class="section-title mb-6">Continue Watching</h2>
           <div appDragScroll class="flex gap-x-5 pb-3">
             @for (entry of continueWatching; track entry.cartoonId) {
@@ -102,7 +120,7 @@
                   </span>
                 </div>
                 <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-[#ecc8e9]" role="progressbar" [attr.aria-valuenow]="entry.progress" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="entry.cartoon.title + ' progress'">
-                  <div class="h-full rounded-full bg-grape" [style.width.%]="entry.progress"></div>
+                  <div class="h-full rounded-full bg-linear-to-r from-grape to-blush" [style.width.%]="entry.progress"></div>
                 </div>
                 <h3 class="mt-2.5 truncate font-bold">{{ entry.cartoon.title }}</h3>
                 <p class="text-[0.8rem] opacity-80">{{ entry.minutesLeft }} min left · {{ entry.progress }}% watched</p>
@@ -112,7 +130,7 @@
         </section>
 
         <!-- CARTOON OF THE WEEK -->
-        <section class="mt-[60px]" aria-labelledby="spotlight-title">
+        <section appReveal class="mt-[60px]" aria-labelledby="spotlight-title">
           <h2 id="spotlight-title" class="section-title mb-6">Cartoon of the Week</h2>
           <article class="glass-card grid overflow-hidden border border-[rgba(253,150,253,0.35)] @2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
             <div class="relative min-h-[230px]">
@@ -151,7 +169,7 @@
         </section>
 
         <!-- BOOKS -->
-        <section id="books" class="mt-[60px] scroll-mt-5" aria-labelledby="books-title">
+        <section appReveal id="books" class="mt-[60px] scroll-mt-5" aria-labelledby="books-title">
           <div class="mb-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
             <h2 id="books-title" class="section-title">Comic Book Shelf</h2>
             <p class="text-[0.85rem] opacity-75">Classics from the cartoonists you love · {{ library.books().size }} saved to read</p>
@@ -179,7 +197,7 @@
         </section>
 
         <!-- FAVORITES -->
-        <section id="favorites" class="mt-[60px] scroll-mt-5" aria-labelledby="favorites-title">
+        <section appReveal id="favorites" class="mt-[60px] scroll-mt-5" aria-labelledby="favorites-title">
           <div class="mb-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
             <h2 id="favorites-title" class="section-title">Your Favorites</h2>
             <p class="text-[0.85rem] opacity-75">{{ favorites().length }} saved in this browser</p>
@@ -207,7 +225,7 @@
         </section>
 
         <!-- NEWSLETTER -->
-        <section class="mt-[60px]" aria-labelledby="newsletter-title">
+        <section appReveal class="mt-[60px]" aria-labelledby="newsletter-title">
           <div class="relative overflow-hidden rounded-[20px] border-2 border-[rgba(167,159,168,0.5)] bg-[linear-gradient(240deg,rgba(144,91,151,0.85),rgba(123,21,149,0.92))] p-8 text-white shadow-button max-[580px]:p-6">
             <span class="absolute -top-16 -right-10 size-48 rounded-full bg-white/10" aria-hidden="true"></span>
             <span class="absolute -bottom-20 left-1/3 size-40 rounded-full bg-white/10" aria-hidden="true"></span>
@@ -234,11 +252,11 @@
 
       <!-- RIGHT CONTENT -->
       <aside class="@container flex min-w-0 flex-col rounded-r-[15px] border-l border-white/50 px-5 py-[30px] text-ink-dark max-[700px]:border-l-0" aria-label="Music and activity">
-        <section aria-labelledby="songs-title">
+        <section appReveal aria-labelledby="songs-title">
           <h2 id="songs-title" class="section-title mb-6">Recommended Songs</h2>
           <ul>
             @for (song of songs; track song.title; let i = $index) {
-              <li class="mb-[22px] grid grid-cols-[26%_auto_10%] items-center max-[1250px]:grid-cols-[29%_auto_10%] max-[1100px]:grid-cols-[26%_auto_10%] max-[910px]:grid-cols-[30%_auto_12%] max-[825px]:grid-cols-[28%_auto_10%] max-[700px]:grid-cols-[18%_auto_8%] max-[580px]:grid-cols-[23%_auto_8%] max-[450px]:grid-cols-[25%_auto_8%]"
+              <li class="-mx-2 mb-2.5 grid cursor-default grid-cols-[26%_auto_10%] rounded-xl px-2 py-1.5 transition hover:bg-white/30 items-center max-[1250px]:grid-cols-[29%_auto_10%] max-[1100px]:grid-cols-[26%_auto_10%] max-[910px]:grid-cols-[30%_auto_12%] max-[825px]:grid-cols-[28%_auto_10%] max-[700px]:grid-cols-[18%_auto_8%] max-[580px]:grid-cols-[23%_auto_8%] max-[450px]:grid-cols-[25%_auto_8%]"
                 [class]="songVisibility(i)">
                 <div class="group relative w-[60px] rounded-md">
                   <img [src]="song.image" alt="" loading="lazy" class="aspect-[4/3] rounded-[inherit] border-2 border-[rgba(168,159,168,0.5)] object-cover shadow-frame">
@@ -256,11 +274,11 @@
           </ul>
         </section>
 
-        <app-music-player class="mt-5" />
+        <app-music-player appReveal class="mt-5" />
 
-        <app-weekly-activity id="activity" class="mt-6 scroll-mt-5" [days]="weeklyActivity" [favorites]="library.favorites().size" />
+        <app-weekly-activity appReveal id="activity" class="mt-6 scroll-mt-5" [days]="weeklyActivity" [favorites]="library.favorites().size" />
 
-        <section class="glass-card mt-6 p-5" aria-labelledby="premieres-title">
+        <section appReveal class="glass-card mt-6 p-5" aria-labelledby="premieres-title">
           <h2 id="premieres-title" class="mb-4 text-lg font-bold">Upcoming Premieres</h2>
           <ul class="flex flex-col gap-3">
             @for (premiere of premieres; track premiere.id) {
@@ -282,7 +300,7 @@
           </ul>
         </section>
 
-        <section class="glass-card mt-6 p-5" aria-labelledby="friends-title">
+        <section appReveal class="glass-card mt-6 p-5" aria-labelledby="friends-title">
           <div class="mb-4 flex items-center justify-between gap-2">
             <h2 id="friends-title" class="text-lg font-bold">Friends Watching</h2>
             <span class="text-[0.8rem] opacity-75">{{ friends.length }} friends</span>
@@ -292,7 +310,10 @@
               <li class="flex items-center gap-3">
                 <span class="relative grid size-10 shrink-0 place-items-center rounded-full text-[0.85rem] font-bold text-white" [style.background-color]="friend.color" aria-hidden="true">
                   {{ initials(friend.name) }}
-                  @if (friend.live) { <span class="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-white bg-[#1f9d62]"></span> }
+                  @if (friend.live) {
+                    <span class="absolute -right-0.5 -bottom-0.5 size-3 animate-ping rounded-full bg-[#1f9d62]/60 motion-reduce:hidden"></span>
+                    <span class="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-white bg-[#1f9d62]"></span>
+                  }
                 </span>
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-[0.95rem] font-bold">{{ friend.name }}</p>
@@ -304,7 +325,7 @@
           </ul>
         </section>
 
-        <section class="glass-card sticky top-5 mt-6 p-5 max-[700px]:static" aria-labelledby="trivia-title">
+        <section appReveal class="glass-card sticky top-5 mt-6 p-5 max-[700px]:static" aria-labelledby="trivia-title">
           <div class="mb-3 flex items-center gap-2.5">
             <span class="grid size-8 place-items-center rounded-full bg-orchid text-[0.85rem] text-white" aria-hidden="true"><i class="fa-solid fa-lightbulb"></i></span>
             <h2 id="trivia-title" class="text-lg font-bold">Toon Trivia</h2>
@@ -332,3 +353,9 @@
     </div>
   </main>
 </div>
+
+<button type="button" (click)="scrollToTop()" aria-label="Back to top"
+  class="fixed right-6 bottom-6 z-20 grid size-12 cursor-pointer place-items-center rounded-full bg-linear-to-br from-orchid to-plum text-white shadow-glow transition duration-300 hover:-translate-y-1 max-[450px]:right-4 max-[450px]:bottom-4"
+  [class.pointer-events-none]="!showTop()" [class.opacity-0]="!showTop()" [class.translate-y-4]="!showTop()" [attr.tabindex]="showTop() ? null : -1" [attr.aria-hidden]="showTop() ? null : true">
+  <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+</button>
