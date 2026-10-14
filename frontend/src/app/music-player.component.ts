@@ -15,10 +15,18 @@ export class MusicPlayerComponent {
   protected readonly playing = signal(false);
   protected readonly currentTime = signal(0);
   protected readonly duration = signal(0);
+  protected readonly progress = computed(() => (this.duration() ? (this.currentTime() / this.duration()) * 100 : 0));
+  protected readonly equalizerDelays = [0, 0.3, 0.15, 0.45];
   protected readonly controlClass = "m-5 flex aspect-square w-9 cursor-pointer items-center justify-center rounded-full bg-[rgba(200,187,255,0.6)] text-[1.1rem] text-white shadow-control transition-all duration-300 ease-linear max-[1250px]:m-[15px] max-[700px]:m-5";
 
   constructor() {
     afterNextRender(() => this.load());
+  }
+
+  /** Formats seconds as "m:ss". */
+  protected clock(seconds: number): string {
+    const whole = Number.isFinite(seconds) ? Math.floor(seconds) : 0;
+    return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
   }
 
   protected togglePlay(): void {

@@ -1,24 +1,38 @@
-<div class="relative">
+<p class="mb-4 flex h-4 items-center gap-2 text-[0.7rem] font-bold tracking-[0.15em] text-plum/80 uppercase">
+  <span class="flex h-3 items-end gap-[2px]" aria-hidden="true">
+    @for (delay of equalizerDelays; track $index) {
+      <span class="h-full w-[3px] origin-bottom rounded-full bg-grape transition-transform motion-reduce:animate-none"
+        [class.animate-equalizer]="playing()" [class.scale-y-30]="!playing()" [style.animation-delay.s]="delay"></span>
+    }
+  </span>
+  {{ playing() ? 'Now playing' : 'Paused' }}
+</p>
+
+<div class="relative rounded-full transition-shadow duration-700" [style.box-shadow]="playing() ? '0 0 36px 6px rgba(244, 150, 253, 0.55)' : null">
   <img [src]="track().cover" (error)="coverFailed($event)" alt=""
     class="pointer-events-none aspect-square w-[120px] max-w-full animate-spin-slow rounded-full border-2 border-[rgba(255,215,248,0.9)] object-cover select-none motion-reduce:animate-none"
     [style.animation-play-state]="playing() ? 'running' : 'paused'">
   <span class="absolute top-1/2 left-1/2 z-[2] aspect-square w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[rgba(255,215,252,0.9)] bg-[rgba(17,6,58,0.7)]"></span>
 </div>
 
-<h2 class="mt-4 mb-0.5 text-center text-[1.2rem] font-medium">{{ track().title }}</h2>
-<p class="mb-[26px] text-center text-base font-light opacity-80">{{ track().artist }}</p>
+<h2 class="mt-4 mb-0.5 text-center text-[1.2rem] font-bold">{{ track().title }}</h2>
+<p class="mb-[22px] text-center text-base font-light opacity-80">{{ track().artist }}</p>
 
 <audio #audio preload="metadata" (loadedmetadata)="metadataLoaded()" (timeupdate)="timeUpdate()" (ended)="skip(1)"
   (play)="playing.set(true)" (pause)="playing.set(false)"></audio>
 
 <input type="range" class="player-progress" aria-label="Song progress" min="0" step="any"
-  [max]="duration()" [value]="currentTime()" (input)="seek($event)" (change)="play()">
+  [max]="duration()" [value]="currentTime()" [style.--progress]="progress() + '%'" (input)="seek($event)" (change)="play()">
+<div class="mb-2 flex w-full justify-between text-[0.75rem] font-medium tabular-nums opacity-70">
+  <span>{{ clock(currentTime()) }}</span>
+  <span>{{ clock(duration()) }}</span>
+</div>
 
 <div class="flex items-center justify-center">
   <button type="button" (click)="skip(-1)" aria-label="Previous song" [class]="controlClass + ' hover:scale-[0.96] focus-visible:scale-[0.96]'">
     <i class="fa-solid fa-backward" aria-hidden="true"></i>
   </button>
-  <button type="button" (click)="togglePlay()" [attr.aria-label]="playing() ? 'Pause' : 'Play'" [class]="controlClass + ' scale-[1.3] hover:scale-[1.25] focus-visible:scale-[1.25]'">
+  <button type="button" (click)="togglePlay()" [attr.aria-label]="playing() ? 'Pause' : 'Play'" [class]="controlClass + ' scale-[1.3] bg-linear-to-br from-orchid to-grape hover:scale-[1.25] focus-visible:scale-[1.25]'">
     <i class="fa-solid" [class.fa-play]="!playing()" [class.fa-pause]="playing()" aria-hidden="true"></i>
   </button>
   <button type="button" (click)="skip(1)" aria-label="Next song" [class]="controlClass + ' hover:scale-[0.96] focus-visible:scale-[0.96]'">
