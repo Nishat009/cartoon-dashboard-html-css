@@ -1,19 +1,19 @@
 import { Album, Artist, Book, Cartoon, DayActivity, Friend, GenreTile, NavItem, Premiere, Slide, Song, Track, WatchProgress } from "./models";
 
 const IMG = {
-  anime: "images/cartoons/anime-worlds.jpg",
-  captain: "images/cartoons/captain-america.jpg",
-  spider: "images/cartoons/spider-man.jpg",
-  minions: "images/cartoons/minions.jpg",
-  oggy: "images/cartoons/oggy.jpg",
-  tiger: "images/cartoons/tigers-kitchen.jpg",
-  bear: "images/cartoons/summer-tales.jpg",
-  bunny: "images/cartoons/curious-bunny.jpg",
-  bunnyCake: "images/cartoons/cake-paws.jpg",
-  bunnySnack: "images/cartoons/sweet-safari.jpg"
+  anime: "images/cartoons/anime-worlds.webp",
+  captain: "images/cartoons/captain-america.webp",
+  spider: "images/cartoons/spider-man.webp",
+  minions: "images/cartoons/minions.webp",
+  oggy: "images/cartoons/oggy.webp",
+  tiger: "images/cartoons/tigers-kitchen.webp",
+  bear: "images/cartoons/summer-tales.webp",
+  bunny: "images/cartoons/curious-bunny.webp",
+  bunnyCake: "images/cartoons/cake-paws.webp",
+  bunnySnack: "images/cartoons/sweet-safari.webp"
 };
 
-export const USER = { name: "Falaq Seherish", avatar: "images/avatar.jpg" };
+export const USER = { name: "Falaq Seherish", avatar: "images/avatar.webp" };
 
 export const SLIDES: Slide[] = [
   { title: "Anime", image: IMG.anime },

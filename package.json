@@ -8,6 +8,12 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "start:web": "npm run start --workspace frontend",
-    "build": "npm run build --workspace frontend"
+    "build": "npm run build --workspace frontend",
+    "optimize:images": "node scripts/optimize-images.mjs",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "sharp": "^0.35.5"
   }
 }
