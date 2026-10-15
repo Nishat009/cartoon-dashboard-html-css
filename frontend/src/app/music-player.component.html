@@ -18,17 +18,19 @@
 <h2 class="mt-4 mb-0.5 text-center text-[1.2rem] font-bold">{{ track().title }}</h2>
 <p class="mb-[22px] text-center text-base font-light opacity-80">{{ track().artist }}</p>
 
-<audio #audio preload="metadata" (loadedmetadata)="metadataLoaded()" (timeupdate)="timeUpdate()" (ended)="skip(1)"
-  (play)="playing.set(true)" (pause)="playing.set(false)"></audio>
+<audio #audio preload="none" (loadedmetadata)="metadataLoaded()" (timeupdate)="timeUpdate()" (ended)="skip(1)"
+  (play)="playing.set(true)" (pause)="playing.set(false)" (error)="playbackFailed()"></audio>
 
 <input type="range" class="player-progress" aria-label="Song progress" min="0" step="any"
-  [max]="duration()" [value]="currentTime()" [style.--progress]="progress() + '%'" (input)="seek($event)" (change)="play()">
+  [disabled]="!duration()" [max]="duration()" [value]="currentTime()" [style.--progress]="progress() + '%'" (input)="seek($event)">
 <div class="mb-2 flex w-full justify-between text-[0.75rem] font-medium tabular-nums opacity-70">
   <span>{{ clock(currentTime()) }}</span>
   <span>{{ clock(duration()) }}</span>
 </div>
 
-<div class="flex items-center justify-center">
+@if (error()) { <p role="status" class="mt-3 text-center text-sm text-plum">{{ error() }}</p> }
+
+<div class="mt-4 flex w-full items-center justify-center gap-5">
   <button type="button" (click)="skip(-1)" aria-label="Previous song" [class]="controlClass + ' hover:scale-[0.96] focus-visible:scale-[0.96]'">
     <i class="fa-solid fa-backward" aria-hidden="true"></i>
   </button>
