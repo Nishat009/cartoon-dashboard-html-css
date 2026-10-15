@@ -1,7 +1,8 @@
-import { Component, ElementRef, afterNextRender, computed, signal, viewChild } from "@angular/core";
+import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, computed, signal, viewChild } from "@angular/core";
 import { FALLBACK_COVER, TRACKS } from "./dashboard-data";
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: "app-music-player",
   templateUrl: "./music-player.component.html",
   host: { class: "glass-card flex flex-col items-center justify-center px-5 py-[30px] text-[#241010] backdrop-blur-[10px]" }
@@ -15,9 +16,10 @@ export class MusicPlayerComponent {
   protected readonly playing = signal(false);
   protected readonly currentTime = signal(0);
   protected readonly duration = signal(0);
+  protected readonly error = signal('');
   protected readonly progress = computed(() => (this.duration() ? (this.currentTime() / this.duration()) * 100 : 0));
   protected readonly equalizerDelays = [0, 0.3, 0.15, 0.45];
-  protected readonly controlClass = "m-5 flex aspect-square w-9 cursor-pointer items-center justify-center rounded-full bg-[rgba(200,187,255,0.6)] text-[1.1rem] text-white shadow-control transition-all duration-300 ease-linear max-[1250px]:m-[15px] max-[700px]:m-5";
+  protected readonly controlClass = "flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[rgba(200,187,255,0.6)] text-[1.1rem] text-white shadow-control transition-all duration-300 ease-linear";
 
   constructor() {
     afterNextRender(() => this.load());
@@ -34,6 +36,13 @@ export class MusicPlayerComponent {
     else this.audio().nativeElement.pause();
   }
 
+  selectTrack(index: number): void {
+    if (!this.tracks[index]) return;
+    this.index.set(index);
+    this.load();
+    this.play();
+  }
+
   protected skip(step: number): void {
     this.index.update((index) => (index + step + this.tracks.length) % this.tracks.length);
     this.load();
@@ -41,17 +50,20 @@ export class MusicPlayerComponent {
   }
 
   protected seek(event: Event): void {
-    this.audio().nativeElement.currentTime = Number((event.target as HTMLInputElement).value);
+    const value = Number((event.target as HTMLInputElement).value);
+    if (!Number.isFinite(this.duration()) || this.duration() <= 0) return;
+    this.audio().nativeElement.currentTime = value;
+    this.currentTime.set(value);
   }
 
   protected timeUpdate(): void {
     const audio = this.audio().nativeElement;
-    if (!audio.paused) this.currentTime.set(audio.currentTime);
+    this.currentTime.set(audio.currentTime);
   }
 
   protected metadataLoaded(): void {
     const audio = this.audio().nativeElement;
-    this.duration.set(audio.duration);
+    this.duration.set(Number.isFinite(audio.duration) ? audio.duration : 0);
     this.currentTime.set(audio.currentTime);
   }
 
@@ -61,11 +73,21 @@ export class MusicPlayerComponent {
   }
 
   protected play(): void {
+    this.error.set('');
     // Browsers can refuse playback (e.g. no network); the icon then stays on "play".
-    this.audio().nativeElement.play().catch(() => this.playing.set(false));
+    this.audio().nativeElement.play().catch(() => {
+      this.playing.set(false);
+      this.error.set('Unable to play this track. Please try again or skip to the next song.');
+    });
+  }
+
+  protected playbackFailed(): void {
+    this.playing.set(false);
+    this.error.set('Unable to load this track. Please try the next song.');
   }
 
   private load(): void {
+    this.error.set('');
     this.audio().nativeElement.src = this.track().source;
     this.currentTime.set(0);
     this.duration.set(0);

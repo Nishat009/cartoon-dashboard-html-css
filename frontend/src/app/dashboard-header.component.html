@@ -1,0 +1,14 @@
+        <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p class="flex items-center gap-2 text-[0.9rem] font-semibold text-plum/80">
+              <i class="fa-solid fa-hand animate-float text-[#e0a64c] motion-reduce:animate-none" aria-hidden="true"></i> {{ greeting() }}, {{ firstName() }}
+            </p>
+            <p class="mt-1 text-[clamp(1.3rem,3vw,1.9rem)] leading-tight font-extrabold text-ink-dark">What are we watching today?</p>
+          </div>
+          <form role="search" class="relative w-full max-w-xs max-[1100px]:max-w-none" (submit)="submit($event)">
+            <label for="search" class="sr-only">Search cartoons</label>
+            <i class="fa-solid fa-magnifying-glass pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-plum/70" aria-hidden="true"></i>
+            <input id="search" type="search" placeholder="Search cartoons..." autocomplete="off" [value]="query()" (input)="queryChange.emit($any($event.target).value)"
+              class="w-full rounded-full border border-white/60 bg-white/35 py-2.5 pr-4 pl-11 text-ink-dark shadow-panel backdrop-blur-sm transition outline-none placeholder:text-ink/60 focus:border-white focus:bg-white/60 focus:shadow-glow">
+          </form>
+        </header>

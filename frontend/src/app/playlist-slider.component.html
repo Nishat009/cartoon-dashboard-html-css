@@ -1,14 +1,14 @@
 <div #swiper class="playlist-swiper swiper mb-[50px] w-full pt-4 pb-5">
   <div class="swiper-wrapper">
-    @for (slide of slides(); track slide.title) {
-      <div class="swiper-slide relative w-[600px] max-[1250px]:w-[500px] max-[1100px]:w-[410px] max-[910px]:w-[350px] max-[825px]:w-[320px] max-[700px]:w-[420px] max-[580px]:w-[340px] max-[450px]:w-[320px] max-[400px]:w-[260px]">
-        <img [src]="slide.image" [alt]="slide.title"
-          class="h-[300px] rounded-[20px] border-2 border-[rgba(167,159,168,0.5)] object-cover max-[1250px]:h-[280px] max-[1250px]:rounded-2xl max-[1100px]:h-[220px] max-[910px]:h-[180px] max-[825px]:h-[200px] max-[580px]:h-[180px]">
-        <div class="absolute inset-0 flex flex-col items-start justify-end gap-y-3 rounded-[20px] bg-[linear-gradient(240deg,transparent,transparent,rgba(123,21,149,0.8))] p-[30px] max-[1250px]:rounded-2xl max-[825px]:gap-y-2 max-[825px]:px-9 max-[825px]:py-3 max-[700px]:gap-y-3 max-[700px]:px-[30px] max-[700px]:py-5 max-[450px]:gap-y-2 max-[450px]:px-9 max-[450px]:py-3 max-[400px]:px-5">
+    @for (slide of slides(); track slide.title; let first = $first) {
+      <div class="swiper-slide relative">
+        <img [src]="slide.image" [alt]="slide.title" [attr.loading]="first ? 'eager' : 'lazy'" [attr.fetchpriority]="first ? 'high' : 'auto'" decoding="async"
+          class="playlist-image rounded-[20px] border-2 border-[rgba(167,159,168,0.5)] object-cover">
+        <div class="playlist-overlay absolute inset-0 flex flex-col items-start justify-end gap-y-3 rounded-[20px] bg-[linear-gradient(240deg,transparent,transparent,rgba(123,21,149,0.8))]">
           <h3 class="text-[clamp(1.2rem,3vw,2.2rem)] font-bold text-white">{{ slide.title }}</h3>
-          <button type="button"
+          <button type="button" (click)="choose.emit(slide.image)"
             class="flex w-max cursor-pointer items-center justify-center gap-x-2.5 rounded-xl border border-[rgba(168,159,167,0.4)] bg-[#ebe6ea2a] px-4 py-3 backdrop-blur-sm text-[clamp(0.7rem,3vw,1rem)] font-medium text-[#e0d8d8] uppercase shadow-button transition-all duration-[400ms] ease-linear hover:bg-white hover:text-plum focus-visible:bg-white focus-visible:text-plum max-[825px]:px-3 max-[825px]:py-2">
-            Watch Now <i class="fa-solid fa-circle-play" aria-hidden="true"></i>
+            Explore <i class="fa-solid fa-circle-play" aria-hidden="true"></i>
           </button>
         </div>
       </div>
