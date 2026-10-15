@@ -1,10 +1,14 @@
 @import "tailwindcss";
+@import "@fontsource-variable/nunito";
+@import "@fortawesome/fontawesome-free/css/fontawesome.min.css";
+@import "@fortawesome/fontawesome-free/css/solid.min.css";
+@import "@fortawesome/fontawesome-free/css/regular.min.css";
 @import "swiper/css" layer(components);
 @import "swiper/css/effect-coverflow" layer(components);
 @import "swiper/css/pagination" layer(components);
 
 @theme {
-  --font-sans: "Nunito", sans-serif;
+  --font-sans: "Nunito Variable", system-ui, sans-serif;
 
   /* Text */
   --color-ink: #522d2d;
