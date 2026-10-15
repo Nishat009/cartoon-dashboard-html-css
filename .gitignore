@@ -2,3 +2,7 @@ node_modules/
 dist/
 .angular/
 coverage/
+.npm-cache/
+test-results/
+playwright-report/
+*.log
