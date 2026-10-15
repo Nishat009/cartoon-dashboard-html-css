@@ -1,5 +1,10 @@
+import { DetailDialogComponent } from './detail-dialog.component';
+import { ExperienceService } from './experience.service';
+import { TrackListComponent } from './track-list.component';
+import { DashboardHeaderComponent } from './dashboard-header.component';
+import { CatalogComponent } from './catalog.component';
 import { DatePipe } from "@angular/common";
-import { Component, DestroyRef, NgZone, afterNextRender, computed, inject, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, DestroyRef, NgZone, afterNextRender, computed, inject, signal } from "@angular/core";
 import {
   ALBUMS, ARTISTS, BOOKS, CARTOONS, CONTINUE_WATCHING, FRIENDS, GENRE_TILES, PREMIERES, PRIMARY_NAV,
   SLIDES, SONGS, SPOTLIGHT, TRIVIA, USER, WEEKLY_ACTIVITY
@@ -27,10 +32,12 @@ function greetingFor(hour: number): string {
 
 @Component({
   selector: "app-root",
-  imports: [DatePipe, DragScrollDirective, FavoriteButtonComponent, MusicPlayerComponent, PlaylistSliderComponent, RevealDirective, SidebarComponent, WeeklyActivityComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [DetailDialogComponent, TrackListComponent, DashboardHeaderComponent, CatalogComponent, DatePipe, DragScrollDirective, FavoriteButtonComponent, MusicPlayerComponent, PlaylistSliderComponent, RevealDirective, SidebarComponent, WeeklyActivityComponent],
   templateUrl: "./app.component.html"
 })
 export class AppComponent {
+  protected readonly experience = inject(ExperienceService);
   protected readonly library = inject(LibraryService);
 
   protected readonly slides = SLIDES;
@@ -58,11 +65,6 @@ export class AppComponent {
   protected readonly query = signal("");
   protected readonly showTop = signal(false);
 
-  protected readonly trending = computed(() => CARTOONS
-    .filter((cartoon) => this.genre() === "All" || cartoon.genre === this.genre())
-    .filter((cartoon) => cartoon.title.toLowerCase().includes(this.query().trim().toLowerCase()))
-    .sort((a, b) => b.views - a.views)
-    .slice(0, 6));
   protected readonly favorites = computed(() => CARTOONS.filter((cartoon) => this.library.favorites().has(cartoon.id)));
 
   /** Pauses the scroll spy while a nav click scrolls the page. */
@@ -72,10 +74,19 @@ export class AppComponent {
   constructor() {
     const zone = inject(NgZone);
     let frame = 0;
+    let positions: { label: string; top: number }[] = [];
+    const measure = () => {
+      positions = PRIMARY_NAV.flatMap(item => {
+        const element = document.getElementById(item.section!);
+        return element ? [{ label: item.label, top: element.getBoundingClientRect().top + window.scrollY }] : [];
+      });
+    };
+    const resize = new ResizeObserver(measure);
     const onScroll = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const label = this.sectionInView();
+        const line = window.scrollY + window.innerHeight * 0.35;
+        const label = this.spyPaused ? null : positions.filter(item => item.top <= line).at(-1)?.label;
         if (label && label !== this.activeNav()) zone.run(() => this.activeNav.set(label));
         const showTop = window.scrollY > window.innerHeight;
         if (showTop !== this.showTop()) zone.run(() => this.showTop.set(showTop));
@@ -85,17 +96,24 @@ export class AppComponent {
     afterNextRender(() => zone.runOutsideAngular(() => {
       window.addEventListener("scroll", onScroll, { passive: true });
       window.addEventListener("scrollend", onScrollEnd);
+      resize.observe(document.querySelector("main")!);
+      window.addEventListener("resize", measure, { passive: true });
+      measure();
       onScroll(); // The browser may restore a scroll position on reload.
     }));
     inject(DestroyRef).onDestroy(() => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("scrollend", onScrollEnd);
+      resize.disconnect();
+      window.removeEventListener("resize", measure);
       cancelAnimationFrame(frame);
       clearTimeout(this.spyTimer);
     });
   }
 
   protected navigate(item: NavItem): void {
+    if (item.label === 'Settings') { this.experience.panel.set({ kind: 'settings' }); return; }
+    if (item.label === 'Library') { this.experience.panel.set({ kind: 'library' }); return; }
     this.activeNav.set(item.label);
     const section = item.section && document.getElementById(item.section);
     if (!section) return;
@@ -103,7 +121,17 @@ export class AppComponent {
     clearTimeout(this.spyTimer);
     // Fallback for browsers without the scrollend event.
     this.spyTimer = setTimeout(() => (this.spyPaused = false), 1200);
-    section.scrollIntoView({ behavior: "smooth", block: "start" });
+    section.scrollIntoView({ behavior: this.scrollBehavior(), block: "start" });
+  }
+
+  protected openCartoon(image: string): void {
+    const cartoon = CARTOONS.find(item => item.image === image);
+    if (cartoon) this.experience.panel.set({ kind: 'cartoon', cartoon });
+  }
+
+  protected resetFilters(): void {
+    this.query.set("");
+    this.genre.set("All");
   }
 
   protected search(value: string): void {
@@ -111,13 +139,16 @@ export class AppComponent {
   }
 
   /** Enter in the search box jumps to the filtered results. */
-  protected showResults(event: Event): void {
-    event.preventDefault();
+  protected showResults(): void {
     this.navigate(PRIMARY_NAV.find((item) => item.section === "trending")!);
   }
 
   protected scrollToTop(): void {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: this.scrollBehavior() });
+  }
+
+  private scrollBehavior(): ScrollBehavior {
+    return this.experience.motion() && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'instant';
   }
 
   protected browseGenre(genre: GenreTile["name"]): void {
@@ -158,17 +189,4 @@ export class AppComponent {
     email.value = "";
   }
 
-  /** The nav item of the last section whose top has passed 35% of the viewport. */
-  private sectionInView(): string | null {
-    if (this.spyPaused) return null;
-    const line = window.innerHeight * 0.35;
-    const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
-    let best: { label: string; top: number } | null = null;
-    for (const item of PRIMARY_NAV) {
-      const top = document.getElementById(item.section!)?.getBoundingClientRect().top;
-      if (top === undefined || top > (atBottom ? window.innerHeight : line)) continue;
-      if (!best || top > best.top) best = { label: item.label, top };
-    }
-    return best?.label ?? null;
-  }
 }

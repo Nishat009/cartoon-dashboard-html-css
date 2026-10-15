@@ -155,7 +155,6 @@ export const PRIMARY_NAV: NavItem[] = [
 ];
 
 export const SECONDARY_NAV: NavItem[] = [
-  { label: "Account", icon: "fa-user", section: "activity" },
-  { label: "Settings", icon: "fa-gear" },
-  { label: "Logout", icon: "fa-right-from-bracket" }
+  { label: "Library", icon: "fa-bookmark" },
+  { label: "Settings", icon: "fa-gear" }
 ];
