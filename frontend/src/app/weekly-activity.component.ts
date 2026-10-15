@@ -1,4 +1,4 @@
-import { Component, computed, input } from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, input } from "@angular/core";
 import { DayActivity } from "./models";
 
 /** Formats minutes as "1h 50m" / "45m". */
@@ -8,6 +8,7 @@ function duration(minutes: number): string {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: "app-weekly-activity",
   templateUrl: "./weekly-activity.component.html",
   host: { class: "glass-card block p-5" }

@@ -1,8 +1,9 @@
-import { Component, computed, inject, input } from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, inject, input } from "@angular/core";
 import { LibraryService } from "./library.service";
 import { Cartoon } from "./models";
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: "app-favorite-button",
   template: `
     <button type="button" (click)="library.toggleFavorite(cartoon().id)" [attr.aria-pressed]="active()" [attr.aria-label]="'Favorite ' + cartoon().title"
