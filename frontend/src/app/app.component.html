@@ -2,14 +2,14 @@
 <a href="#main-content" class="skip-link">Skip to content</a>
 
 <div class="flex min-h-screen items-center justify-center">
-  <main class="dashboard-shell z-10 m-10 grid w-[95%] max-w-[calc(100%-80px)] grid-cols-[11%_89%] rounded-[15px] border border-[rgba(247,189,189,0.5)] bg-[rgba(223,175,215,0.377)] shadow-glass backdrop-blur-[10px] max-[1500px]:grid-cols-[6%_94%] max-[1310px]:m-[30px] max-[1310px]:max-w-[calc(100%-60px)] max-[1310px]:grid-cols-[8%_92%] max-[910px]:m-5 max-[910px]:max-w-[calc(100%-40px)] max-[910px]:grid-cols-[10%_90%] max-[700px]:grid-cols-[15%_85%] max-[450px]:m-2.5 max-[450px]:max-w-[calc(100%-20px)]">
+  <main class="dashboard-shell z-10 grid border">
     <h1 class="sr-only">Cartoon Lifestyle</h1>
 
     <app-sidebar [active]="activeNav()" (navigate)="navigate($event)" />
 
-    <div class="dashboard-columns grid min-w-0 grid-cols-[75%_25%] max-[1500px]:grid-cols-[70%_30%] max-[1100px]:grid-cols-[60%_40%] max-[825px]:grid-cols-[52%_48%] max-[700px]:grid-cols-[100%]">
+    <div class="dashboard-columns grid min-w-0">
       <!-- LEFT CONTENT -->
-      <div id="main-content" tabindex="-1" class="@container min-w-0 px-5 py-[30px] text-ink max-[1100px]:pt-10 max-[1100px]:pb-5 max-[910px]:pt-[30px]">
+      <div id="main-content" tabindex="-1" class="@container min-w-0 text-ink">
 
         <app-dashboard-header [greeting]="greeting" [firstName]="firstName" [query]="query()" (queryChange)="search($event)" (searchSubmit)="showResults()" />
 
